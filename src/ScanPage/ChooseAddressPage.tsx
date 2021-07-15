@@ -2,9 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { Formik, Form } from 'formik';
 import classNames from 'classnames';
 
-/* Hooks */
-import { useToggleState } from '../react-helpers';
-
 /* Helpers */
 import { connectWallet } from '../poap-eth';
 import { resolveENS, getENSFromAddress } from '../api';
@@ -54,7 +51,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ onAddress }) => {
 
   return (
     <button className="btn" onClick={doLogin}>
-      <span>Show me my Badges</span>
+      <span>Browse Collection</span>
     </button>
   );
 };
@@ -119,8 +116,6 @@ const AddressInput: React.FC<AddressInputProps> = ({ onAddress }) => {
 };
 
 export const ChooseAddressPage: React.FC<ChooseAddressPageProps> = ({ onAccountDetails }) => {
-  const [enterByHand, toggleEnterByHand] = useToggleState(false);
-
   return (
     <main id="site-main" role="main" className="app-content">
       <div className="container">
@@ -130,25 +125,8 @@ export const ChooseAddressPage: React.FC<ChooseAddressPageProps> = ({ onAccountD
             to.
           </p>
           <br />
-          {enterByHand ? (
-            <AddressInput onAddress={onAccountDetails} />
-          ) : (
-            <>
-              <LoginButton onAddress={onAccountDetails} />
-              <p>
-                or{' '}
-                <a
-                  href="/"
-                  onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-                    event.preventDefault();
-                    toggleEnterByHand();
-                  }}
-                >
-                  enter an address by hand
-                </a>
-              </p>
-            </>
-          )}
+          <AddressInput onAddress={onAccountDetails} />
+          <LoginButton onAddress={onAccountDetails} />
         </div>
       </div>
     </main>
