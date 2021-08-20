@@ -187,6 +187,14 @@ const ROUTES = {
       title: 'Manage Websites',
     },
   },
+
+  secret: {
+    secretsManage: {
+      path: '/admin/secrets',
+      roles: [ROLES.administrator, ROLES.eventHost],
+      title: 'Manage Secrets',
+    },
+  },
 };
 
 const IMAGE_SUPPORTED_FORMATS = ['image/png'];

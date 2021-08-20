@@ -28,8 +28,9 @@ import { TemplateFormPage } from './templates/TemplateFormPage';
 import { Checkouts } from './Checkouts';
 import { Deliveries } from './Deliveries';
 import { AdminLogsPage } from './AdminLogsPage';
-import { DeliveriesRequests } from './DeliveriesRequests';
+import { DeliveriesRequests } from './Deliveries/DeliveriesRequests';
 import { WebsitesManage } from './Websites/WebsitesManage';
+import { SecretsManage } from './Secrets/SecretsManage';
 
 export const MintersPage = () => <div> This is a MintersPage </div>;
 
@@ -105,6 +106,8 @@ export const NavigationMenu = withRouter(({ history }) => {
       {!isAdmin && <Label label={LABELS.menu} />}
 
       <SidebarLink route={ROUTES.websites.websitesManage} handleClick={closeMenu} />
+
+      <SidebarLink route={ROUTES.secret.secretsManage} handleClick={closeMenu} />
 
       <SidebarLink route={ROUTES.events} handleClick={closeMenu} />
 
@@ -230,6 +233,8 @@ export const BackOffice: React.FC = () => (
           <Route exact path={ROUTES.adminLogs.path} render={() => <AdminLogsPageWithAuthentication />} />
 
           <Route path={ROUTES.websites.websitesManage.path} render={() => <WebsitesManage />} />
+
+          <Route path={ROUTES.secret.secretsManage.path} render={() => <SecretsManage />} />
 
           <Route path="*" render={() => <Redirect to="/admin" />} />
         </Switch>
