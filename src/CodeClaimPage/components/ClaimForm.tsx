@@ -13,20 +13,20 @@ import { HashClaim, postClaimHash, getClaimHash, postTokenMigration, Template, T
 import { AddressSchema } from 'lib/schemas';
 
 /* Components */
-import ClaimFooterMessage from './ClaimFooterMessage';
 import { SubmitButton } from 'components/SubmitButton';
 import { TxDetail } from 'components/TxDetail';
 
 /* Lib */
 import { isValidEmail } from 'lib/helpers';
-import { useImageSrc } from 'lib/hooks/useImageSrc';
+// import { useImageSrc } from 'lib/hooks/useImageSrc';
 import { COLORS, STYLES, TX_STATUS } from 'lib/constants';
 
 /* ABI */
 import abi from 'abis/PoapDelegatedMint.json';
 import { useWindowWidth } from '@react-hook/window-size';
 import dayjs from 'dayjs';
-import { parse } from "date-fns";
+import { parse } from 'date-fns';
+import Footer from '../../components/Footer';
 
 type QRFormValues = {
   address: string;
@@ -50,11 +50,11 @@ const ClaimForm: React.FC<{
   const [txHash, setTxHash] = useState<string>('');
   const [txReceipt, setTxReceipt] = useState<null | TransactionReceipt>(null);
 
-  const mobileImageUrlRaw = claim?.event_template?.mobile_image_url ?? template?.mobile_image_url;
-  const mobileImageLink = claim?.event_template?.mobile_image_link ?? template?.mobile_image_link;
+  // const mobileImageUrlRaw = claim?.event_template?.mobile_image_url ?? template?.mobile_image_url;
+  // const mobileImageLink = claim?.event_template?.mobile_image_link ?? template?.mobile_image_link;
   const mainColor = claim?.event_template?.main_color ?? template?.main_color;
 
-  const mobileImageUrl = useImageSrc(mobileImageUrlRaw);
+  // const mobileImageUrl = useImageSrc(mobileImageUrlRaw);
 
   const { addToast } = useToasts();
   const width = useWindowWidth();
@@ -231,18 +231,28 @@ const ClaimForm: React.FC<{
     return (
       <div className={'container claim-info'} data-aos="fade-up" data-aos-delay="300">
         This POAP can’t be minted because it’s been too long since the event finished
-        <br/>
+        <br />
         If you think this is a mistake, try using Chrome or Safari
       </div>
     );
   }
 
-  const daysExpired = eventDate ? dayjs(eventDate).diff(dayjs(), 'day') : 0
+  const daysExpired = eventDate ? dayjs(eventDate).diff(dayjs(), 'day') : 0;
   const dateString = (date: Date) => {
-    const day = parseInt(date.toLocaleDateString("en-US", { day: 'numeric' }))
-    return date.toLocaleDateString("en-US", { month: 'long' }) +
-            ` ${day}${day === 1 || day === 21 || day === 31 ? 'st' : (day === 2 || day === 22) ? 'nd' : (day === 3 || day === 23) ? 'rd' : 'th'}, ` +
-            date.toLocaleDateString("en-US", { year: 'numeric' })
+    const day = parseInt(date.toLocaleDateString('en-US', { day: 'numeric' }));
+    return (
+      date.toLocaleDateString('en-US', { month: 'long' }) +
+      ` ${day}${
+        day === 1 || day === 21 || day === 31
+          ? 'st'
+          : day === 2 || day === 22
+          ? 'nd'
+          : day === 3 || day === 23
+          ? 'rd'
+          : 'th'
+      }, ` +
+      date.toLocaleDateString('en-US', { year: 'numeric' })
+    );
   };
 
   return (
@@ -267,7 +277,11 @@ const ClaimForm: React.FC<{
                         autoComplete="off"
                         style={{ borderColor: mainColor ?? COLORS.primaryColor }}
                         className={classNames(!!form.errors[field.name] && 'error')}
-                        placeholder={(width > 440 ? 'Input your ':'') + (width > 380 ? 'Ethereum': 'Eth') + ' address, ENS name or email'}
+                        placeholder={
+                          (width > 440 ? 'Input your ' : '') +
+                          (width > 380 ? 'Ethereum' : 'Eth') +
+                          ' address, ENS name or email'
+                        }
                         {...field}
                         disabled={claimed}
                       />
@@ -280,11 +294,14 @@ const ClaimForm: React.FC<{
                   className={'layer-checkbox'}
                   onClick={!isSubmitting && !migrateInProcess && !claimed ? toggleCheckbox : () => {}}
                 >
-                  {
-                    claim ?
-                      <><br />This POAP can be minted for the next {daysExpired === 1 ? 'day' : `${daysExpired} days`}. <br />
-                      It will expire on {dateString(new Date(claim.event.expiry_date))} <br /><br /></> : null
-                  }
+                  {claim ? (
+                    <>
+                      <br />
+                      This POAP can be minted for the next {daysExpired === 1 ? 'day' : `${daysExpired} days`}. <br />
+                      It will expire on {dateString(new Date(claim.event.expiry_date))} <br />
+                      <br />
+                    </>
+                  ) : null}
                   <CheckboxIcon color={mainColor ?? COLORS.primaryColor} /> Free minting in xDAI{' '}
                   <Tooltip content={[migrationText]}>
                     <FiHelpCircle color={mainColor ?? COLORS.primaryColor} />
@@ -299,7 +316,7 @@ const ClaimForm: React.FC<{
                     </div>
                     <SubmitButton
                       text="Mint POAP token"
-                      className='mint-button'
+                      className="mint-button"
                       style={{
                         backgroundColor: mainColor ?? COLORS.primaryColor,
                         boxShadow: mainColor ? STYLES.boxShadow(mainColor) : '',
@@ -323,18 +340,7 @@ const ClaimForm: React.FC<{
         </div>
       )}
 
-      <ClaimFooterMessage linkStyle={{ color: mainColor ?? COLORS.primaryColor }} />
-      <div className="mobile-image">
-        {mobileImageUrl ? (
-          mobileImageLink ? (
-            <a href={mobileImageLink} rel="noopener noreferrer" target="_blank">
-              <img alt="Brand publicity" src={mobileImageUrl} />
-            </a>
-          ) : (
-            <img alt="Brand publicity" src={mobileImageUrl} />
-          )
-        ) : null}
-      </div>
+      <Footer />
     </div>
   );
 };

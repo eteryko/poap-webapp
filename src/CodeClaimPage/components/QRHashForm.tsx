@@ -7,10 +7,10 @@ import { Formik, Form, Field, FieldProps } from 'formik';
 import { ClaimHashSchema } from 'lib/schemas';
 
 /* Components */
-import ClaimFooterMessage from './ClaimFooterMessage';
 import { SubmitButton } from 'components/SubmitButton';
 
 import { HashClaim } from '../../api';
+
 type HashFormValues = {
   hash: string;
 };
@@ -62,7 +62,6 @@ const QRHashForm: React.FC<{
           }}
         </Formik>
       </div>
-      <ClaimFooterMessage />
     </div>
   );
 };

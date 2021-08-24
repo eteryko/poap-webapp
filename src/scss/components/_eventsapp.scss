@@ -102,16 +102,17 @@ footer {
   margin-top: auto;
   margin-left: auto;
   margin-right: auto;
-  position: relative;
 
   .cover {
     position: absolute;
-    z-index: -1;
+    z-index: 0;
     width: 100%;
     height: 295px;
   }
 
   .footer-container {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -277,18 +278,15 @@ footer {
   Code Claim Page
   ****************************************************** */
 .code-claim-page {
-  background: $color-invert;
-
-  &.claim {
-    min-height: 100vh;
-  }
-
-  display: flex;
-  flex-direction: column;
+  background-color: white;
+  min-width: 360px;
+  min-height: 100vh;
 
   .claim-header {
-    position: relative;
-    background: $bg-color;
+    .claim-cover {
+      position: absolute;
+      z-index: 0;
+    }
 
     &.template {
       background: none;
@@ -355,110 +353,52 @@ footer {
       }
     }
 
-    .title {
+    .claim-title-logo-container {
+      position: relative;
+      padding-top: 56px;
+      z-index: 2;
       text-align: center;
-      font-size: 38px;
-      color: #8076FA;
-      font-weight: $fontWeight-medium;
-      padding: 80px 0 20px;
-      font-family: $font-family-title;
+
+      .title {
+        font-style: normal;
+        font-weight: $fontWeight-medium;
+        font-size: 28px;
+        line-height: 40px;
+        font-family: $font-family-title;
+        color: $violet2;
+        letter-spacing: 0.006em;
+        text-align: center;
+      }
+
+      .logo-event {
+        z-index: 1;
+        width: 220px;
+        margin: 0 auto 19px auto;
+        padding: 10px;
+        border-radius: 50%;
+        background: white !important;
+
+        img {
+          filter: drop-shadow(0px 6px 16px $violet2);
+          width: 200px;
+          height: 200px;
+        }
+      }
     }
 
     .template-title {
+      font-style: normal;
+      font-weight: $fontWeight-medium;
+      font-size: 28px;
+      line-height: 40px;
+      font-family: $font-family-title;
+      color: $violet2;
+      letter-spacing: 0.006em;
       text-align: center;
-      font-size: 38px;
-      color: $color-primary;
-      font-weight: bold;
-      padding: 2rem 0 20px;
-      font-family: $font-family-narrow;
-    }
-
-    .logo-event {
-      position: relative;
-      z-index: 1;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background-color: white;
-      margin: 0 auto;
-      -webkit-box-shadow: 0 4px 14px 0 rgba($color-primary, 0.5);
-      -moz-box-shadow: 0 4px 14px 0 rgba($color-primary, 0.5);
-      box-shadow: 0 4px 14px 0 rgba($color-primary, 0.5);
-
-      .image-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        overflow: hidden;
-      }
-
-      @media (min-width: $bp-mw) {
-        width: 200px;
-        height: 200px;
-      }
-
-      .claimed-badge {
-        background: $color-fourth;
-        -webkit-box-shadow: 0 4px 14px 0 rgba($color-primary, 0.5);
-        -moz-box-shadow: 0 4px 14px 0 rgba($color-primary, 0.5);
-        box-shadow: 0 4px 14px 0 rgba($color-primary, 0.5);
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        position: absolute;
-        text-align: center;
-        top: 90px;
-        right: 10px;
-
-        @media (min-width: $bp-mw) {
-          top: 160px;
-          right: 20px;
-          width: 50px;
-          height: 50px;
-        }
-
-        img {
-          padding-top: 4px;
-          width: 20px;
-          @media (min-width: $bp-mw) {
-            width: 40px;
-            right: 30px;
-          }
-        }
-      }
-    }
-
-    .wave-holder {
-      width: 100%;
-      margin-top: -60px;
-
-      @media (min-width: $bp-mw) {
-        margin-top: -100px;
-      }
-
-      img {
-        margin-bottom: -5px;
-        width: 100%;
-      }
     }
   }
 
   .claim-body {
-    padding-top: 50px;
-    padding-left: 10px;
-    padding-right: 10px;
-    flex: 1;
-
-    @media (min-width: $bp-mw) {
-      padding-top: 0;
-    }
-    @media (min-width: $bp-xxl) {
-      margin-top: -50px;
-    }
-
     .mobile-image {
       text-align: center;
       @media (min-width: $bp-m) {
@@ -481,10 +421,6 @@ footer {
 
     &.template {
       padding-bottom: 24px;
-    }
-
-    .container {
-      min-width: 18em;
     }
 
     .claim-form {
@@ -572,18 +508,6 @@ footer {
         }
       }
     }
-  }
-
-  .claim-footer {
-    padding: 30px 0 0;
-    text-align: center;
-    font-size: 1.1rem;
-    line-height: 1.5rem;
-  }
-
-  footer {
-    background: #fff;
-    //padding: 0 0 300px;
   }
 }
 

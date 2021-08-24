@@ -19,13 +19,6 @@ export const ScanPage: React.FC<RouteComponentProps> = ({ match, history, locati
   );
   useBodyClassName('poap-app');
 
-  const resolvePathname = (): string => {
-    const { pathname } = history.location;
-    if (pathname.includes('/claim')) return 'claim';
-    if (pathname.includes('/token')) return 'token';
-    return 'home';
-  };
-
   return (
     <div className="landing">
       <Header sectionName="Scan" />
@@ -34,7 +27,7 @@ export const ScanPage: React.FC<RouteComponentProps> = ({ match, history, locati
       <Route exact path={ROUTES.scanHome} render={() => <ChooseAddressPage onAccountDetails={showBadges} />} />
       <Route path={ROUTES.scan} component={AddressTokensPage} />
       <Route path={ROUTES.token} component={TokenDetailPage} />
-      <Footer path={resolvePathname()} />
+      <Footer />
     </div>
   );
 };
