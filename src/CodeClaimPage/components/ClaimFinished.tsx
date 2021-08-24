@@ -6,7 +6,7 @@ import { getNumberWithOrdinal, isValidEmail } from '../../lib/helpers';
 
 /* Components */
 import { LinkButton } from '../../components/LinkButton';
-import ClaimFooterMessage from './ClaimFooterMessage';
+import Footer from "../../components/Footer";
 
 /*
  * @dev: Component to show minted token
@@ -60,7 +60,7 @@ const ClaimFinished: React.FC<{ claim: HashClaim }> = ({ claim }) => {
       let tokens = null;
       // use the user_input ( email ) if there is no beneficiary ( address ) to get collection
       const collectionAddress = claim.beneficiary ? claim.beneficiary : claim.user_input;
-      if ( collectionAddress) {
+      if (collectionAddress) {
         tokens = await getTokensFor(collectionAddress);
       }
       setTokens(tokens);
@@ -120,7 +120,7 @@ const ClaimFinished: React.FC<{ claim: HashClaim }> = ({ claim }) => {
         {collectorNumber && <br />}
         See who else got it at <a href={poapGalleryUrl()}>POAP Gallery</a>
       </div>
-      <ClaimFooterMessage />
+      <Footer />
     </div>
   );
 };

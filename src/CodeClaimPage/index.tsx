@@ -13,7 +13,6 @@ import ClaimLoading from './components/ClaimLoading';
 import ClaimPending from './components/ClaimPending';
 import ClaimFinished from './components/ClaimFinished';
 import { TemplateClaimLoading } from './templateClaim/TemplateClaimLoading';
-import { ClaimFooter } from 'components/ClaimFooter';
 
 /* Constants */
 import { TX_STATUS } from '../lib/constants';
@@ -22,6 +21,7 @@ import { TX_STATUS } from '../lib/constants';
 import EmptyBadge from '../images/empty-badge.svg';
 import { TemplateClaimFooter } from './templateClaim/TemplateClaimFooter';
 import { TemplateClaimHeader } from './templateClaim/TemplateClaimHeader';
+import Footer from '../components/Footer';
 
 export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({ match }) => {
   const [claim, setClaim] = useState<null | HashClaim>(null);
@@ -34,7 +34,7 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
   const queryParams = queryString.parse(location.search);
 
   let { hash } = match.params;
-  const address = queryParams.address? queryParams.address.toString() : '';
+  const address = queryParams.address ? queryParams.address.toString() : '';
   let title = 'POAP Claim';
   let image = EmptyBadge;
 
@@ -128,7 +128,7 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
       {hash && !claim && !claimError ? (
         <TemplateClaimLoading />
       ) : (
-        <div className={'code-claim-page claim'}>
+        <div className={'code-claim-page'}>
           {!claim?.event_template ? (
             <ClaimHeader
               title={title}
@@ -139,13 +139,14 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
             <TemplateClaimHeader
               title={title}
               image={image}
-              claimed={!!(claim && claim.tx_status === TX_STATUS.passed) || claimedWithEmail}
+              claimed={(claim && claim.tx_status === TX_STATUS.passed) || claimedWithEmail}
               claim={claim}
             />
           )}
 
           <div className={`claim-body ${claim?.event_template ? 'template' : ''}`}>{body}</div>
-          {!claim?.event_template ? <ClaimFooter /> : <TemplateClaimFooter claim={claim} />}
+
+          {!claim?.event_template ? <Footer /> : <TemplateClaimFooter claim={claim} />}
         </div>
       )}
     </>

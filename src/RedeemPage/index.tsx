@@ -181,7 +181,7 @@ export const RedeemPage: FC<RouteComponentProps> = ({ match }) => {
     <div className="landing">
       <Header sectionName="Claim" />
       <div className="redeem-content-container">{body}</div>
-      <Footer path="home" />
+      <Footer />
     </div>
   );
 };

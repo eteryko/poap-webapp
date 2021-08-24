@@ -5,11 +5,11 @@ import { HashClaim } from '../../api';
 import { blockscoutLinks, TX_STATUS } from '../../lib/constants';
 
 /* Components */
-import ClaimFooterMessage from './ClaimFooterMessage';
 import { LinkButton } from 'components/LinkButton';
 
 /* Assets */
 import Spinner from 'images/etherscan-spinner.svg';
+import Footer from "../../components/Footer";
 
 /*
  * @dev: Component to show user that transactions is being mined
@@ -46,7 +46,7 @@ const ClaimPending: React.FC<{ claim: HashClaim; checkClaim: (hash: string) => P
           />
         </>
       )}
-      <ClaimFooterMessage />
+      <Footer />
     </div>
   );
 };

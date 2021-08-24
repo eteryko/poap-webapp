@@ -137,7 +137,7 @@ const CheckoutPage: FC<RouteComponentProps<CheckoutPageProps>> = ({ location, ma
       <main id="site-main" role="main" className="app-content">
         <div className="container">{renderBody()}</div>
       </main>
-      <Footer path="home" />
+      <Footer />
     </div>
   );
 };

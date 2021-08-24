@@ -7,11 +7,7 @@ import TelegramLogo from '../images/telegram.svg';
 import DiscordLogo from '../images/discord.svg';
 import RedditLogo from '../images/reddit.svg';
 
-type FooterProps = {
-  path: string;
-};
-
-const Footer: React.FC<FooterProps> = ({ path }) => (
+const Footer: React.FC = () => (
   <footer>
     <img src={FooterCover} className={'cover'} alt={'footer cover'} />
     <div className={'footer-container'}>
