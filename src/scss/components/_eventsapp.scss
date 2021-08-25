@@ -358,12 +358,13 @@ footer {
     }
 
     .claim-title-logo-container {
-      position: relative;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       padding-top: 56px;
-      z-index: 2;
-      text-align: center;
 
-      .title {
+      .claim-title {
         font-style: normal;
         font-weight: $fontWeight-medium;
         font-size: 28px;
@@ -371,21 +372,34 @@ footer {
         font-family: $font-family-title;
         color: $violet2;
         letter-spacing: 0.006em;
+        width: fit-content;
+        max-width: 426px;
         text-align: center;
       }
 
       .logo-event {
+        position: relative;
         z-index: 1;
         width: 220px;
+        height: 220px;
         margin: 0 auto 19px auto;
         padding: 10px;
         border-radius: 50%;
         background: white !important;
 
-        img {
+        img.logo-img {
+          position: absolute;
+          z-index: 2;
           filter: drop-shadow(0px 6px 16px $violet2);
           width: 200px;
           height: 200px;
+        }
+
+        .check {
+          position: absolute;
+          right: 14px;
+          bottom: 20px;
+          z-index: 3;
         }
       }
     }
