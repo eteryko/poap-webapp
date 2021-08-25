@@ -393,6 +393,7 @@ footer {
           filter: drop-shadow(0px 6px 16px $violet2);
           width: 200px;
           height: 200px;
+          border-radius: 50%;
         }
 
         .check {
@@ -478,8 +479,9 @@ footer {
     }
 
     .claim-info {
-      text-align: center;
-      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
 
       .claim-preloader {
         padding: 50px 0;
@@ -523,6 +525,71 @@ footer {
             margin: 0 auto 0.5rem;
             max-width: inherit;
           }
+        }
+      }
+
+      .claim-community-message-container {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin-top: 100px;
+        margin-bottom: 118px;
+
+        .claim-community-title {
+          margin-top: 18px;
+          font-family: $font-family-title;
+          font-style: normal;
+          font-weight: 500;
+          font-size: 22px;
+          line-height: 27px;
+          letter-spacing: 0.01em;
+          color: $violet2;
+        }
+
+        .claim-community-subtitle {
+          font-style: normal;
+          font-weight: normal;
+          font-size: 16px;
+          line-height: 24px;
+
+          /* Greyscale / 04 */
+          color: $grayscale4;
+
+          a {
+            color: $grayscale4;
+            text-decoration: underline;
+          }
+        }
+      }
+
+      .claim-claiming-message-container {
+        display: flex;
+        flex-direction: row;
+        background-color: $grayscale0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        width: 355px;
+
+        p {
+          color: $grayscale5;
+          font-style: normal;
+          font-weight: normal;
+          font-size: 16px;
+          line-height: 24px;
+          padding-left: 8px;
+        }
+
+        @keyframes spinner {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .spinner {
+          animation: spinner .6s infinite;
         }
       }
     }
