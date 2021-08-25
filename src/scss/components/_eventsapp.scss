@@ -102,6 +102,7 @@ footer {
   margin-top: auto;
   margin-left: auto;
   margin-right: auto;
+  height: 295px;
 
   .cover {
     position: absolute;
@@ -278,6 +279,8 @@ footer {
   Code Claim Page
   ****************************************************** */
 .code-claim-page {
+  display: flex;
+  flex-direction: column;
   background-color: white;
   min-width: 360px;
   min-height: 100vh;
@@ -286,6 +289,7 @@ footer {
     .claim-cover {
       position: absolute;
       z-index: 0;
+      width: 100%;
     }
 
     &.template {
