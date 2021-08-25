@@ -19,14 +19,15 @@ import { TxDetail } from 'components/TxDetail';
 /* Lib */
 import { isValidEmail } from 'lib/helpers';
 // import { useImageSrc } from 'lib/hooks/useImageSrc';
-import { COLORS, STYLES, TX_STATUS } from 'lib/constants';
+import { COLORS, TX_STATUS } from 'lib/constants';
 
 /* ABI */
 import abi from 'abis/PoapDelegatedMint.json';
 import { useWindowWidth } from '@react-hook/window-size';
 import dayjs from 'dayjs';
 import { parse } from 'date-fns';
-import Footer from '../../components/Footer';
+import ClaimCommunityMessage from './ClaimCommunityMessage';
+import ClaimingMessage from './ClaimingMessage';
 
 type QRFormValues = {
   address: string;
@@ -172,30 +173,31 @@ const ClaimForm: React.FC<{
   const toggleCheckbox = () => setMigrate(!migrate);
 
   const handleFormSubmit = async (values: QRFormValues, actions: FormikActions<QRFormValues>) => {
-    if (claimed) {
-      startMigration();
-      return;
-    }
-    try {
-      actions.setSubmitting(true);
-      if (claim) {
-        const newClaim = await postClaimHash(claim.qr_hash.toLowerCase(), values.address.toLowerCase(), claim.secret);
-        setClaimed(true);
-        if (migrate && !isValidEmail(values.address)) {
-          setMigrateInProcess(true);
-          setCompleteClaim(newClaim);
-          actions.setSubmitting(false);
-        } else {
-          onSubmit(newClaim);
-        }
-      }
-    } catch (error) {
-      actions.setStatus({
-        ok: false,
-        msg: `Badge couldn't be claimed: ${error.message}`,
-      });
-      actions.setSubmitting(false);
-    }
+    actions.setSubmitting(true);
+    // if (claimed) {
+    //   startMigration();
+    //   return;
+    // }
+    // try {
+    //   actions.setSubmitting(true);
+    //   if (claim) {
+    //     const newClaim = await postClaimHash(claim.qr_hash.toLowerCase(), values.address.toLowerCase(), claim.secret);
+    //     setClaimed(true);
+    //     if (migrate && !isValidEmail(values.address)) {
+    //       setMigrateInProcess(true);
+    //       setCompleteClaim(newClaim);
+    //       actions.setSubmitting(false);
+    //     } else {
+    //       onSubmit(newClaim);
+    //     }
+    //   }
+    // } catch (error) {
+    //   actions.setStatus({
+    //     ok: false,
+    //     msg: `Badge couldn't be claimed: ${error.message}`,
+    //   });
+    //   actions.setSubmitting(false);
+    // }
   };
 
   const fetchClaim = async () => {
@@ -267,66 +269,67 @@ const ClaimForm: React.FC<{
         >
           {({ isValid, isSubmitting, status }) => {
             return (
-              <Form className="claim-form">
-                <Field
-                  name="address"
-                  render={({ field, form }: FieldProps) => {
-                    return (
-                      <input
-                        type="text"
-                        autoComplete="off"
-                        style={{ borderColor: mainColor ?? COLORS.primaryColor }}
-                        className={classNames(!!form.errors[field.name] && 'error')}
-                        placeholder={
-                          (width > 440 ? 'Input your ' : '') +
-                          (width > 380 ? 'Ethereum' : 'Eth') +
-                          ' address, ENS name or email'
-                        }
-                        {...field}
-                        disabled={claimed}
-                      />
-                    );
-                  }}
-                />
-                <ErrorMessage name="gasPrice" component="p" className="bk-error" />
-                {status && <p className={status.ok ? 'bk-msg-ok' : 'bk-msg-error'}>{status.msg}</p>}
-                <div
-                  className={'layer-checkbox'}
-                  onClick={!isSubmitting && !migrateInProcess && !claimed ? toggleCheckbox : () => {}}
-                >
-                  {claim ? (
-                    <>
-                      <br />
-                      This POAP can be minted for the next {daysExpired === 1 ? 'day' : `${daysExpired} days`}. <br />
-                      It will expire on {dateString(new Date(claim.event.expiry_date))} <br />
-                      <br />
-                    </>
-                  ) : null}
-                  <CheckboxIcon color={mainColor ?? COLORS.primaryColor} /> Free minting in xDAI{' '}
-                  <Tooltip content={[migrationText]}>
-                    <FiHelpCircle color={mainColor ?? COLORS.primaryColor} />
-                  </Tooltip>
-                </div>
-                {!txHash && (
-                  <>
-                    <div className={'web3-browser'}>
-                      <div>
-                        <span onClick={getAddress}>Get my address</span>
-                      </div>
-                    </div>
-                    <SubmitButton
-                      text="Mint POAP token"
-                      className="mint-button"
-                      style={{
-                        backgroundColor: mainColor ?? COLORS.primaryColor,
-                        boxShadow: mainColor ? STYLES.boxShadow(mainColor) : '',
+              <>
+                {!isSubmitting && (
+                  <Form className="claim-form">
+                    <Field
+                      name="address"
+                      render={({ field, form }: FieldProps) => {
+                        return (
+                          <input
+                            type="text"
+                            autoComplete="off"
+                            className={classNames(!!form.errors[field.name] && 'error')}
+                            placeholder={
+                              (width > 440 ? 'Input your ' : '') +
+                              (width > 380 ? 'Ethereum' : 'Eth') +
+                              ' address, ENS name or email'
+                            }
+                            {...field}
+                            disabled={claimed}
+                          />
+                        );
                       }}
-                      isSubmitting={isSubmitting || migrateInProcess}
-                      canSubmit={isValid}
                     />
-                  </>
+                    <ErrorMessage name="gasPrice" component="p" className="bk-error" />
+                    {status && <p className={status.ok ? 'bk-msg-ok' : 'bk-msg-error'}>{status.msg}</p>}
+                    <div
+                      className={'layer-checkbox'}
+                      onClick={!isSubmitting && !migrateInProcess && !claimed ? toggleCheckbox : () => {}}
+                    >
+                      {claim ? (
+                        <>
+                          <br />
+                          This POAP can be minted for the next {daysExpired === 1 ? 'day' : `${daysExpired} days`}.{' '}
+                          <br />
+                          It will expire on {dateString(new Date(claim.event.expiry_date))} <br />
+                          <br />
+                        </>
+                      ) : null}
+                      <CheckboxIcon color={mainColor ?? COLORS.primaryColor} /> Free minting in xDAI{' '}
+                      <Tooltip content={[migrationText]}>
+                        <FiHelpCircle color={mainColor ?? COLORS.primaryColor} />
+                      </Tooltip>
+                    </div>
+                    {!txHash && (
+                      <>
+                        <div className={'web3-browser'}>
+                          <div>
+                            <span onClick={getAddress}>Get my address</span>
+                          </div>
+                        </div>
+                        <SubmitButton
+                          text="Claim POAP token"
+                          className="mint-button"
+                          isSubmitting={isSubmitting || migrateInProcess}
+                          canSubmit={isValid}
+                        />
+                      </>
+                    )}
+                  </Form>
                 )}
-              </Form>
+                {isSubmitting && <ClaimingMessage />}
+              </>
             );
           }}
         </Formik>
@@ -339,8 +342,7 @@ const ClaimForm: React.FC<{
           <p>It seems that your transaction failed. Please refresh the page</p>
         </div>
       )}
-
-      <Footer />
+      <ClaimCommunityMessage />
     </div>
   );
 };
