@@ -154,52 +154,56 @@ ol {
 .btn {
   display: block;
   min-width: 320px;
-  margin: 0 auto 20px;
+  margin: 20px auto 20px;
   cursor: pointer;
 
-  margin-top: 20px;
+  font-family: $font-family;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 16px;
+  line-height: 21px;
+
   padding: 12px 24px;
 
   border-radius: 40px;
 
-  font-weight: $fontWeight-bold;
-  font-family: $font-family-narrow;
-  @include x-rem(font-size, 24px);
   border: 0;
   text-align: center;
-  color: $color-invert;
+  color: white;
   text-decoration: none;
 
-  background: $color-btn-primary;
+  background: $violet1;
   transition: all 0.2s ease-out;
 
-  -webkit-box-shadow: 0px 10px 30px -5px rgba($color-primary, 0.5);
-  -moz-box-shadow: 0px 10px 30px -5px rgba($color-primary, 0.5);
-  box-shadow: 0px 10px 30px -5px rgba($color-primary, 0.5);
-
-  cursor: pointer;
+  -webkit-box-shadow: 0px 6px 18px rgba($violet2, 0.5);
+  -moz-box-shadow: 0px 6px 18px rgba($violet2, 0.5);
+  box-shadow: 0px 6px 18px rgba($violet2, 0.5);
 
   &:hover,
   &:focus {
     text-decoration: none;
-    background: #683dee;
+    background: $violet3;
+    box-shadow: none;
   }
 
   &:active {
     text-decoration: none;
-    background: #6534ff;
+    background: $violet3;
   }
+
   &.red {
     background: #de4437;
+
     &:hover,
     &:focus {
       background: red;
     }
   }
+
   &:disabled {
     text-decoration: none;
-    background: #ccc4f7;
-    color: #e6e7f7;
+    background: $grayscale1;
+    box-shadow: none;
   }
 
   span {
@@ -211,9 +215,11 @@ ol {
       margin: 0;
     }
   }
+
   .small-text {
     @include x-rem(font-size, 16px);
   }
+
   &.small {
     @include x-rem(font-size, 16px);
     min-width: 150px;
@@ -242,4 +248,6 @@ ol {
   cursor: pointer;
 }
 
-button:focus {outline:0;}
+button:focus {
+  outline: 0;
+}
