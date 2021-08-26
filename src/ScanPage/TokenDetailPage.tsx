@@ -167,7 +167,7 @@ export const TokenDetailPage: React.FC<RouteComponentProps<{
     <>
       <div className="header-events token-page">
         <div className="container">
-          <div className="logo-event token-page">
+          <div className="logo-event">
             {loading && <img src={EmptyBadge} alt="loading" />}
             {!loading && <img src={token?.event.image_url} alt="" />}
           </div>
@@ -192,9 +192,9 @@ export const TokenDetailPage: React.FC<RouteComponentProps<{
               <div className="content-event">
                 <h2>Collection</h2>
                 <div className={`wallet-number ${token?.ens && token?.ens.valid ? 'ens' : ''}`}>
-                  <Link to={`/scan/${token?.ens && token.ens.valid ? token.ens : token?.owner}`}>
+                  <Link to={`/scan/${token?.ens && token.ens.valid ? token.ens.ens : token?.owner}`}>
                     {token?.ens && token.ens.valid
-                      ? token?.ens
+                      ? token?.ens.ens
                       : width < 500
                       ? reduceAddress(token?.owner || '')
                       : token?.owner}
