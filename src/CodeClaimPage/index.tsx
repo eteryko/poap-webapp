@@ -37,6 +37,7 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
   const address = queryParams.address ? queryParams.address.toString() : '';
   let title = 'POAP Claim';
   let image = EmptyBadge;
+  let eventId = 0;
 
   useEffect(() => {
     if (hash) fetchClaim(hash);
@@ -109,6 +110,7 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
     body = <ClaimForm claim={claim} address={address} onSubmit={continueClaim} />;
 
     title = claim.event.name;
+    eventId = claim.event_id;
     if (claim.claimed) {
       // POAP minting
       body = <ClaimPending claim={claim} checkClaim={fetchClaim} />;
@@ -132,6 +134,7 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
           {!claim?.event_template ? (
             <ClaimHeader
               title={title}
+              eventId={eventId}
               image={image}
               claimed={!!(claim && claim.tx_status === TX_STATUS.passed) || claimedWithEmail}
             />

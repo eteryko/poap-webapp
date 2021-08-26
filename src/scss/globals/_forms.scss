@@ -473,16 +473,16 @@ textarea {
     }
   }
 
-  button {
-    min-width: 96px;
-  }
+  //button {
+  //  min-width: 96px;
+  //}
 
   @media (min-width: $bp-l) {
     justify-content: space-between;
 
-    button {
-      min-width: 130px;
-    }
+    //button {
+    //  min-width: 130px;
+    //}
   }
 }
 

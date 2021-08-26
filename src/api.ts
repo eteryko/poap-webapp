@@ -21,6 +21,10 @@ export interface TokenInfo {
   ownerText?: string;
   layer: string;
   ens?: any;
+  supply?: {
+    order: number;
+    total: number;
+  };
 }
 
 export type QrCodesListAssignResponse = {

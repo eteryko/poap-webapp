@@ -376,6 +376,16 @@ footer {
         width: fit-content;
         max-width: 426px;
         text-align: center;
+        margin-bottom: 6px;
+      }
+
+      .claim-subtitle {
+        font-family: $font-family-title;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 20px;
+        line-height: 22px;
+        color: $grayscale4;
       }
 
       .logo-event {
@@ -483,6 +493,7 @@ footer {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
 
       .claim-preloader {
         padding: 50px 0;
@@ -504,7 +515,8 @@ footer {
       }
 
       .text-info {
-        color: $color-medium-violet;
+        text-align: center;
+        color: $grayscale5;
         font-size: 16px;
         line-height: 20px;
         min-width: 300px;
@@ -591,6 +603,157 @@ footer {
 
         .spinner {
           animation: spinner .6s infinite;
+        }
+      }
+
+      .claim-finished-info-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        .claim-congrats-container {
+          display: flex;
+          background-color: rgba(178, 235, 214, 0.4);
+          padding: 10px 14px;
+          border-radius: 10px;
+          width: fit-content;
+          margin: 0 auto 74px auto;
+
+          img {
+            padding-right: 8px;
+          }
+
+          p {
+            font-style: normal;
+            font-weight: normal;
+            font-size: 16px;
+            line-height: 23px;
+            color: #0FCEAD;
+            white-space: nowrap;
+            max-width: none;
+            margin: 0;
+          }
+        }
+
+        .claim-finished-info {
+          display: flex;
+          justify-content: center;
+          padding-bottom: 24px;
+
+          img {
+            padding-right: 8px;
+          }
+
+          p {
+            max-width: none;
+            color: $grayscale4;
+            font-style: normal;
+            font-weight: normal;
+            font-size: 16px;
+            line-height: 21px;
+            margin: 0;
+
+            a {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+
+      .claim-collector-info-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 95%;
+        margin: 90px 56px 72px 56px;
+        padding-top: 40px;
+        padding-bottom: 52px;
+
+        border-top: 1px solid $grayscale1;
+        border-bottom: 1px solid $grayscale1;
+
+        .btn {
+          margin-bottom: 0;
+          margin-top: 32px;
+        }
+
+        .claim-collector-info-title {
+          font-family: $font-family-title;
+          color: $violet2;
+          font-style: normal;
+          font-weight: 500;
+          font-size: 20px;
+          line-height: 27px;
+          letter-spacing: 0.01em;
+          margin-bottom: 32px;
+        }
+
+        .claim-collector-info-address {
+          font-style: normal;
+          font-weight: normal;
+          font-size: 16px;
+          line-height: 23px;
+          color: $grayscale6;
+        }
+
+        .claim-collector-info-stats {
+          display: flex;
+          flex-direction: row;
+          position: relative;
+
+          .claim-collector-info-img-left {
+            z-index: 1;
+            position: absolute;
+            left: -80px;
+          }
+
+          .claim-collector-info-img-right {
+            z-index: 1;
+            position: absolute;
+            right: -80px;
+          }
+
+          .claim-finished-stat-card:not(:first-child):not(:last-child) {
+            margin: 0 24px;
+          }
+        }
+
+        .claim-finished-stat-card {
+          z-index: 2;
+          background-color: white;
+          display: flex;
+          flex-direction: column;
+          width: 225px;
+          height: 96px;
+          padding-top: 18px;
+          padding-left: 12px;
+          box-shadow: 0px 4px 16px rgba(187, 196, 239, 0.35);
+          border-radius: 16px;
+
+          .claim-finished-stat-card-text-icon {
+            display: flex;
+            flex-direction: row;
+
+            .claim-finished-stat-card-text {
+              color: $grayscale5;
+              font-style: normal;
+              font-weight: normal;
+              font-size: 14px;
+              line-height: 18px;
+            }
+          }
+
+          .claim-finished-stat-card-stat {
+            font-family: $font-family-title;
+            font-style: normal;
+            font-weight: normal;
+            font-size: 32px;
+            line-height: 22px;
+            color: $grayscale6;
+            margin-top: 8px;
+            margin-left: 36px;
+          }
         }
       }
     }

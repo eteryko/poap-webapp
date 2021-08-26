@@ -8,21 +8,22 @@ import CheckGreen from '../../images/check_green.svg';
 /*
  * @dev: Common header for QR claim system
  * */
-const ClaimHeader: React.FC<{ title: string; image?: string; claimed?: boolean; success?: boolean }> = ({
+const ClaimHeader: React.FC<{ title: string; eventId: number; image?: string; claimed?: boolean }> = ({
   title,
+  eventId,
   image,
   claimed = true,
-  success,
 }) => {
   return (
     <div className={'claim-header'}>
-      <img src={success ? ClaimCoverSuccess : ClaimCover} alt="cover" className="claim-cover" />
+      <img src={claimed ? ClaimCoverSuccess : ClaimCover} alt="cover" className="claim-cover" />
       <div className="claim-title-logo-container">
         <div className="logo-event">
           <img src={image} alt="event" className="logo-img" />
-          {success && <img src={CheckGreen} alt="check!" className="check" />}
+          {claimed && <img src={CheckGreen} alt="check!" className="check" />}
         </div>
         <h1 className="claim-title">{title}</h1>
+        {eventId > 0 && <h2 className="claim-subtitle">#{eventId}</h2>}
       </div>
     </div>
   );
