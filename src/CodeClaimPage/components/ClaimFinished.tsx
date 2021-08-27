@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 /* Helpers */
-import { getTokenInfo, getTokensFor, HashClaim, TokenInfo } from '../../api';
+import { getTokenInfo, HashClaim, TokenInfo } from '../../api';
 
 /* Components */
 import ClaimCommunityMessage from './ClaimCommunityMessage';
@@ -13,11 +13,9 @@ import ClaimFinishedCollectorInfo from './ClaimFinishedCollectorInfo';
  * */
 const ClaimFinished: React.FC<{ claim: HashClaim }> = ({ claim }) => {
   const [token, setToken] = useState<TokenInfo | undefined>(undefined);
-  const [tokens, setTokens] = useState<TokenInfo[] | null>(null);
 
   useEffect(() => {
     getToken().then();
-    getEvents().then();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -28,20 +26,6 @@ const ClaimFinished: React.FC<{ claim: HashClaim }> = ({ claim }) => {
       } catch (e) {
         console.log('Error on getting token info');
       }
-    }
-  };
-
-  const getEvents = async () => {
-    try {
-      let tokens = null;
-      // use the user_input ( email ) if there is no beneficiary ( address ) to get collection
-      const collectionAddress = claim.beneficiary ? claim.beneficiary : claim.user_input;
-      if (collectionAddress) {
-        tokens = await getTokensFor(collectionAddress);
-      }
-      setTokens(tokens);
-    } catch (e) {
-      console.log(e);
     }
   };
 

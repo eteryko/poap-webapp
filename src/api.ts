@@ -25,6 +25,7 @@ export interface TokenInfo {
     order: number;
     total: number;
   };
+  created?: string;
 }
 
 export type QrCodesListAssignResponse = {
