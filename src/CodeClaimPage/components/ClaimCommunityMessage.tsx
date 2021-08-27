@@ -8,7 +8,8 @@ const ClaimCommunityMessage: React.FC = () => {
       <img src={Badges} alt="badges" />
       <h2 className="claim-community-title">Your community can use POAP too</h2>
       <p className="claim-community-subtitle">
-        Fill out <a href="#">this form</a> and we will reach out to you
+        {/*todo: ask for this url*/}
+        Fill out <a href="https://poap.xyz">this form</a> and we will reach out to you
       </p>
     </div>
   );

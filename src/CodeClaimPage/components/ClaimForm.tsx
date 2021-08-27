@@ -174,30 +174,30 @@ const ClaimForm: React.FC<{
 
   const handleFormSubmit = async (values: QRFormValues, actions: FormikActions<QRFormValues>) => {
     actions.setSubmitting(true);
-    // if (claimed) {
-    //   startMigration();
-    //   return;
-    // }
-    // try {
-    //   actions.setSubmitting(true);
-    //   if (claim) {
-    //     const newClaim = await postClaimHash(claim.qr_hash.toLowerCase(), values.address.toLowerCase(), claim.secret);
-    //     setClaimed(true);
-    //     if (migrate && !isValidEmail(values.address)) {
-    //       setMigrateInProcess(true);
-    //       setCompleteClaim(newClaim);
-    //       actions.setSubmitting(false);
-    //     } else {
-    //       onSubmit(newClaim);
-    //     }
-    //   }
-    // } catch (error) {
-    //   actions.setStatus({
-    //     ok: false,
-    //     msg: `Badge couldn't be claimed: ${error.message}`,
-    //   });
-    //   actions.setSubmitting(false);
-    // }
+    if (claimed) {
+      startMigration();
+      return;
+    }
+    try {
+      actions.setSubmitting(true);
+      if (claim) {
+        const newClaim = await postClaimHash(claim.qr_hash.toLowerCase(), values.address.toLowerCase(), claim.secret);
+        setClaimed(true);
+        if (migrate && !isValidEmail(values.address)) {
+          setMigrateInProcess(true);
+          setCompleteClaim(newClaim);
+          actions.setSubmitting(false);
+        } else {
+          onSubmit(newClaim);
+        }
+      }
+    } catch (error) {
+      actions.setStatus({
+        ok: false,
+        msg: `Badge couldn't be claimed: ${error.message}`,
+      });
+      actions.setSubmitting(false);
+    }
   };
 
   const fetchClaim = async () => {
