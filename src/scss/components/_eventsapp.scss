@@ -127,8 +127,12 @@ footer {
     }
 
     .footer-text {
-      color: $color-primary;
+      color: $violet2;
       font-family: $font-family-title;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 16px;
+      line-height: 22px;
     }
 
     .footer-communities {
