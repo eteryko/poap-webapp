@@ -716,6 +716,9 @@ footer {
 
           .claim-finished-stat-card:not(:first-child):not(:last-child) {
             margin: 0 24px;
+            @media (max-width: $bp-m) {
+              margin: 0 8px;
+            }
           }
         }
 
@@ -726,21 +729,56 @@ footer {
           flex-direction: column;
           width: 225px;
           height: 96px;
-          padding-top: 18px;
-          padding-left: 12px;
-          box-shadow: 0px 4px 16px rgba(187, 196, 239, 0.35);
+          padding: 18px 9px 0 12px;
+          box-shadow: 0 4px 16px rgba(187, 196, 239, 0.35);
           border-radius: 16px;
+
+          @media (max-width: $bp-m) {
+            width: 104px;
+            padding: 12px 9px 12px;
+          }
 
           .claim-finished-stat-card-text-icon {
             display: flex;
             flex-direction: row;
 
             .claim-finished-stat-card-text {
+              margin: auto 0;
               color: $grayscale5;
               font-style: normal;
               font-weight: normal;
               font-size: 14px;
               line-height: 18px;
+            }
+
+            .claim-finished-stat-card-icon {
+              padding-right: 10px;
+              @media (max-width: $bp-m) {
+                display: none
+              }
+            }
+
+            .claim-finished-stat-card-icon-text {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 6px 8px;
+
+              margin-right: 10px;
+              @media (max-width: $bp-m) {
+                display: none
+              }
+
+              font-family: $font-family-title;
+              color: $pink1;
+              font-style: normal;
+              font-weight: normal;
+              font-size: 9px;
+              line-height: 9px;
+              width: 24px;
+              height: 24px;
+              background-color: #FFEDF0;
+              border-radius: 50%;
             }
           }
 
@@ -753,6 +791,10 @@ footer {
             color: $grayscale6;
             margin-top: 8px;
             margin-left: 36px;
+
+            @media (max-width: $bp-m) {
+              margin-left: 0;
+            }
           }
         }
       }
