@@ -296,6 +296,7 @@ footer {
     &.template {
       background: none;
       position: relative;
+      margin-bottom: 40px;
 
       .side-banner {
         z-index: 2;
@@ -454,6 +455,7 @@ footer {
     }
 
     .claim-form {
+      width: 100%;
       text-align: center;
 
       input {

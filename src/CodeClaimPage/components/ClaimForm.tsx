@@ -259,7 +259,7 @@ const ClaimForm: React.FC<{
 
   return (
     <div className={'container claim-info'} data-aos="fade-up" data-aos-delay="300">
-      <div>
+      <>
         <Formik
           enableReinitialize
           onSubmit={handleFormSubmit}
@@ -333,7 +333,7 @@ const ClaimForm: React.FC<{
             );
           }}
         </Formik>
-      </div>
+      </>
 
       {txHash && <TxDetail hash={txHash} receipt={txReceipt} />}
 
