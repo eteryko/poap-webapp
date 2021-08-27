@@ -24,14 +24,9 @@ export const TemplateClaimFooter: FC<Props> = ({ template, claim }) => {
   const templateFooterIcon = useImageSrc(templateFooterIconRaw);
 
   return (
-    <div
-      className="template-claim-footer"
-      style={{ backgroundColor: templateFooterColor || 'purple' }}
-    >
+    <div className="template-claim-footer" style={{ backgroundColor: templateFooterColor || 'purple' }}>
       <div className="footer-icon-container ">
-        {templateFooterIcon && (
-          <img className="footer-icon" alt="Brand logo" src={templateFooterIcon} />
-        )}
+        {templateFooterIcon && <img className="footer-icon" alt="Brand logo" src={templateFooterIcon} />}
       </div>
       <div>
         <div className="footer-content">
@@ -46,11 +41,7 @@ export const TemplateClaimFooter: FC<Props> = ({ template, claim }) => {
               <a href={'https://t.me/poapxyz'} target={'_blank'} rel="noopener noreferrer">
                 <img src={Telegram} alt="Telegram" />
               </a>
-              <a
-                href={'https://github.com/poapxyz/poap'}
-                target={'_blank'}
-                rel="noopener noreferrer"
-              >
+              <a href={'https://github.com/poapxyz/poap'} target={'_blank'} rel="noopener noreferrer">
                 <img src={Github} alt="Github" />
               </a>
             </div>

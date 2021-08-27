@@ -1,11 +1,7 @@
 import React, { FC } from 'react';
 
-// assets
-import Star from 'images/white-star.svg';
-import HeaderShadow from 'images/header-shadow-desktop-white.svg';
-
 // lib
-import { COLORS, STYLES } from 'lib/constants';
+import { STYLES } from 'lib/constants';
 import { HashClaim } from 'api';
 
 // types
@@ -46,33 +42,19 @@ export const TemplateClaimHeader: FC<Props> = ({ claim, title, image, claimed, t
           </a>
         </div>
         <div className="header-link-container">
-          <a
-            style={{ color: headerLinkColor }}
-            href={headerLinkUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a style={{ color: headerLinkColor }} href={headerLinkUrl} target="_blank" rel="noopener noreferrer">
             {headerLinkText}
           </a>
         </div>
       </div>
       <div className={'claim-header template'}>
-        <div style={{ color: mainColor ?? COLORS.primaryColor }} className={'template-title'}>
-          {title}
-        </div>
-        <div
-          className={'logo-event'}
-          style={{ boxShadow: mainColor ? STYLES.boxShadow(mainColor) : '' }}
-        >
-          <div className="image-wrapper">{image && <img src={image} alt="Event" />}</div>
-          {claimed && (
-            <div className={'claimed-badge'}>
-              <img src={Star} alt={'Badge claimed'} />
-            </div>
-          )}
-        </div>
-        <div className={'wave-holder'}>
-          <img src={HeaderShadow} alt={''} />
+        <div className="claim-title-logo-container">
+          <div className={'logo-event'} style={{ boxShadow: mainColor ? STYLES.boxShadow(mainColor) : '' }}>
+            {image && <img src={image} alt="Event" className="logo-img" />}
+          </div>
+          <div style={mainColor ? { color: mainColor } : {}} className="claim-title">
+            {title}
+          </div>
         </div>
 
         {leftImageUrl ? (
