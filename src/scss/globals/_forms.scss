@@ -254,6 +254,7 @@ input[type='color']::-webkit-color-swatch {
   border: none;
 }
 
+button[type='submit'],
 input[type='submit'] {
   display: flex;
   flex-direction: column;

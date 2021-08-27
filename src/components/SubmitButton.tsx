@@ -1,5 +1,6 @@
 import React, { CSSProperties } from 'react';
 import classNames from 'classnames';
+
 export const SubmitButton: React.FC<{
   text: string;
   isSubmitting: boolean;
@@ -7,7 +8,7 @@ export const SubmitButton: React.FC<{
   style?: CSSProperties;
   className?: string;
   onClick?: () => void;
-  type?: 'submit'|'button'|'reset'|undefined;
+  type?: 'submit' | 'button' | 'reset' | undefined;
 }> = ({ isSubmitting, canSubmit, text, style, className, onClick = () => null, type = 'submit' }) => (
   <button
     className={classNames('btn', isSubmitting && 'loading', className && `${className}`)}
