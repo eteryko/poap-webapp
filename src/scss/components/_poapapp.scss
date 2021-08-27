@@ -118,6 +118,14 @@
     text-align: center;
     display: block;
 
+    .scan-form-text {
+      font-style: normal;
+      font-weight: normal;
+      font-size: 20px;
+      line-height: 28px;
+      color: $grayscale4;
+    }
+
     p {
       span {
         font-weight: $fontWeight-bold;
