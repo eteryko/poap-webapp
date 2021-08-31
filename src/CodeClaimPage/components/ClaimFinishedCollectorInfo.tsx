@@ -66,7 +66,9 @@ const ClaimFinishedCollectorInfo: React.FC<{ claim: HashClaim }> = ({ claim }) =
 
   return (
     <div className="claim-collector-info-container">
-      <p className="claim-collector-info-address">Hey, {reduceAddress(claim.beneficiary)} </p>
+      <p className="claim-collector-info-address">
+        Hey, {claim.user_input !== claim.beneficiary ? claim.user_input : reduceAddress(claim.beneficiary)}
+      </p>
       <div className={'claim-collector-info-title'}>Keep growing your collection</div>
       <div className={'claim-collector-info-stats'}>
         <img src={StatsImageLeft} alt="" className="claim-collector-info-img-left" />
