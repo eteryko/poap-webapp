@@ -21,11 +21,13 @@ export interface TokenInfo {
   ownerText?: string;
   layer: string;
   ens?: any;
-  supply?: {
-    order: number;
-    total: number;
-  };
+  supply?: TokenSupply;
   created?: string;
+}
+
+export interface TokenSupply {
+  order: number;
+  total: number;
 }
 
 export type QrCodesListAssignResponse = {
