@@ -14,8 +14,8 @@ import { Column, SortingRule, useExpanded, useSortBy, useTable } from 'react-tab
 
 /* Helpers */
 import {
-  Delivery,
-  getDeliveries, getEventById,
+  ExtendedDelivery,
+  getDeliveries, getDeliveryAddresses, getEventById,
   PoapEvent, PoapFullEvent, rebuildDeliveries,
   SortCondition,
   SortDirection, updateDeliveryStatus,
@@ -56,7 +56,7 @@ const DeliveriesRequests: FC = () => {
   const [isFetchingDeliveries, setIsFetchingDeliveries] = useState<boolean>(false);
   const [approvedFilter, setApprovedFilter] = useState<string>('');
   const [isCreationModalOpen, setIsCreationModalOpen] = useState<boolean>(false);
-  const [_deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [_deliveries, setDeliveries] = useState<ExtendedDelivery[]>([]);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<undefined | number>(undefined);
   const [sortCondition, setSortCondition] = useState<undefined | SortCondition>(undefined);
   const [isRebuilding, setIsRebuilding] = useState<boolean>(false);
@@ -84,6 +84,28 @@ const DeliveriesRequests: FC = () => {
     }
   }, [isRebuilding]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
+  const extendDeliveries = async (extendedDeliveries: ExtendedDelivery[]) => {
+    await Promise.all(extendedDeliveries.map(async d => {
+      await extendDelivery(d)
+    }))
+    setDeliveries(extendedDeliveries);
+  }
+
+  const extendDelivery = async (delivery: ExtendedDelivery) => {
+    // extend with email data
+    const main_event_id = parseInt(delivery.event_ids.split(',')[0], 10)
+    if (!isNaN(main_event_id)) {
+      const main_event = await getEventById(main_event_id)
+      if (main_event && main_event.email && delivery.mail === '') {
+        delivery.mail = main_event?.email
+      }
+    }
+
+    // extend with addresses data
+    const addresses = await getDeliveryAddresses(delivery.id)
+    if (delivery.addresses_amount === 0) delivery.addresses_amount = addresses.length
+  }
+
   const fetchDeliveries = async () => {
     setIsFetchingDeliveries(true);
 
@@ -94,8 +116,12 @@ const DeliveriesRequests: FC = () => {
     const response = await getDeliveries(limit, page * limit, event_id, approved, null, null);
     const { deliveries, total } = response;
 
+    const extendedDeliveries: ExtendedDelivery[] = deliveries.map(d => {
+      return {...d, mail: '', addresses_amount: 0}
+    })
+    await extendDeliveries(extendedDeliveries)
+
     setTotal(total);
-    setDeliveries(deliveries);
     setIsFetchingDeliveries(false);
   };
 
@@ -158,13 +184,19 @@ const DeliveriesRequests: FC = () => {
 
   const getTableData = (): DeliveryTableData[] => {
     return _deliveries.map((delivery) => {
+      const ids = delivery.event_ids.split(',').map((e) => parseInt(e, 10))
+      let main_event_id = isNaN(ids[0]) ? -1 : ids[0]
       return {
         id: delivery.id,
         card_title: delivery.card_title,
-        event_ids: delivery.event_ids.split(',').map((e) => parseInt(e, 10)),
+        event_ids: ids,
         reviewed_date: delivery.approved && delivery.reviewed_date ? formatDate(new Date(delivery.reviewed_date).toDateString()) : '-',
-        reviewed_by: delivery.approved ? delivery.reviewed_by : '-',
+        reviewed_by: delivery.approved && delivery.reviewed_by ? delivery.reviewed_by : '-',
+        main_event_id: main_event_id,
+        mail: delivery.mail,
+        addresses_amount: delivery.addresses_amount,
         approved: delivery.approved !== undefined ? delivery.approved : null,
+        image: delivery.image,
       };
     });
   };
@@ -361,10 +393,14 @@ const ApprovedIconMobile: React.FC<ApprovedIconProps> = ({ approved }) => {
 interface DeliveryTableData {
   id: number;
   card_title: string;
+  reviewed_by: string;
+  reviewed_date: string;
   event_ids: number[];
-  reviewed_by?: string;
-  reviewed_date?: string;
+  main_event_id: number;
+  mail: string;
+  addresses_amount: number;
   approved: boolean|null;
+  image: string;
 }
 
 type DeliveryTableProps = {
@@ -387,19 +423,22 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
         ),
         disableSortBy: true,
       },
-      { Header: '#', accessor: 'id', disableSortBy: true,
+      { Header: 'Delivery ID', accessor: 'id', disableSortBy: true,
+        Cell: ({ value }) => <div className={'center'}>{value}</div>,
+      },
+      { Header: 'Event ID', accessor: 'main_event_id', disableSortBy: true,
         Cell: ({ value }) => <div className={'center'}>{value}</div>,
       },
       {
         id: 'card_title',
         Header: 'Title',
         accessor: 'card_title',
-        Cell: ({ value }) => <div className={'left'}>{value}</div>,
+        Cell: ({ value }) => <div className={'left ellipsis'} style={{maxWidth: 100}}>{value}</div>,
       },
-      {
-        id: 'reviewed_date',
-        Header: 'Reviewed Date',
-        accessor: 'reviewed_date',
+      { Header: 'Mail', accessor: 'mail', disableSortBy: true,
+        Cell: ({ value }) => <div className={'center'}>{value}</div>,
+      },
+      { Header: 'Addresses amount', accessor: 'addresses_amount', disableSortBy: true,
         Cell: ({ value }) => <div className={'center'}>{value}</div>,
       },
       {
@@ -480,15 +519,24 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
                 {row.isExpanded ? (
                   <tr key={i + 'expanded'}>
                     <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
-                      {
+                      <div>
+                        <img src={row.original.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery image'} />
+                        <div>Reviewed date: {row.original.reviewed_date}</div>
+                        <div>Reviewed by: {row.original.reviewed_by}</div>
+                      </div>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(1, 1fr)',
+                        border: '3px solid lightgrey',
+                        padding: 15
+                      }}>{
                         row.original.event_ids.map((id, i) => (
                           <div key={i + 'subcomponentDiv' + id}>
-                            <EventSubComponent key={i + 'subcomponent' + id} eventId={id}
-                                                    reviewed_by={row.original.reviewed_by} />
+                            <EventSubComponent key={i + 'subcomponent' + id} eventId={id} />
                             {i !== row.original.event_ids.length-1 && <hr key={i + 'subcomponentHr' + id}/>}
                           </div>
                         ))
-                      }
+                      }</div>
                     </td>
                   </tr>
                 ) : null}
@@ -509,10 +557,9 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
 
 type EventSubComponentProps = {
   eventId: number;
-  reviewed_by: string | undefined;
 };
 
-const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId, reviewed_by }) => {
+const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId }) => {
   const dateFormatter = (dateString: string) => format(new Date(dateString), 'dd-MMM-yyyy');
   const [event, setEvent] = useState<PoapEvent|PoapFullEvent|null>(null)
 
@@ -528,12 +575,10 @@ const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId, reviewed
     event ?
     <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }} className={'subcomponent'}>
       <h4 style={{ fontWeight: 500 }}>
-        from {dateFormatter(event.start_date)} to {dateFormatter(event.end_date)} expires{' '}
-        {dateFormatter(event.expiry_date)}
+        {`from ${dateFormatter(event.start_date)} to ${dateFormatter(event.end_date)}. Expires ${dateFormatter(event.expiry_date)}`}
       </h4>
-      <img src={event.image_url} style={{ maxWidth: '100px', paddingBottom: '5px' }} alt={'event'} />
-      <div className={'ellipsis'} style={{ width: '70%' }}>{event.description}</div>
-      <div style={{ textAlign: 'center' }}>Reviewed by: {reviewed_by}</div>
+      <div style={{ width: '70%' }}>Id: <a href={`https://poap.gallery/event/${event.id}`} style={{display: 'inline-flex'}} rel="noopener noreferrer" target="_blank">{event.id}</a></div>
+      <div style={{ width: '70%' }}>Email: {!event.email || event.email === '' ? 'No registered email' : event.email}</div>
     </div> : null
   );
 };
@@ -548,14 +593,20 @@ const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loadi
           <tr key={i}>
             <td className={'wrap'}>
               <div>
-                <span>#{delivery.id}</span>
+                <b>Id:</b> {delivery.id}
                 <EditButton id={delivery.id} approved={delivery.approved} onClick={onEdit} style={{ float: 'right' }} />
               </div>
               <div>
-                <b>Card title:</b> {delivery.card_title}
+                <b>Title:</b> {delivery.card_title}
+              </div>
+              <div style={{display: 'flex', alignItems: 'flex-end'}}>
+                <b>Status: </b> <ApprovedIconMobile approved={delivery.approved} />
               </div>
               <div>
-                <b>Approved: </b> <ApprovedIconMobile approved={delivery.approved} />
+                <b>Email: </b> {!delivery.mail || delivery.mail === '' ? 'No registered email' : delivery.mail}
+              </div>
+              <div>
+                <b>Addresses amount: </b> {delivery.addresses_amount}
               </div>
               {delivery.approved ? (
                 <>
@@ -567,6 +618,20 @@ const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loadi
                   </div>
                 </>
               ) : null}
+              <img src={delivery.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery image'} />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(1, 1fr)',
+                border: '3px solid lightgrey',
+                padding: 15
+              }}>{
+                delivery.event_ids.map((id, i) => (
+                  <div key={i + 'subcomponentDiv' + id}>
+                    <EventSubComponent key={i + 'subcomponent' + id} eventId={id} />
+                    {i !== delivery.event_ids.length-1 && <hr key={i + 'subcomponentHr' + id}/>}
+                  </div>
+                ))
+              }</div>
             </td>
           </tr>
         ))}

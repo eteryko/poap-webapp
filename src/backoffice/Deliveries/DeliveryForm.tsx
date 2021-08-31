@@ -47,7 +47,7 @@ const DeliveryForm: FC<RouteComponentProps> = (props) => {
 
   /* State */
   const [delivery, setDelivery] = useState<Delivery | null>(null);
-  const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
+const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
   const [addressesError, setAddressesError] = useState<string>('');
   const [eventIdsError, setEventIdsError] = useState<string>('');
   const [listInput, setListInput] = useState<string>('');
@@ -304,7 +304,7 @@ const DeliveryForm: FC<RouteComponentProps> = (props) => {
                   edit_codes.join(','),
                   clean_addresses,
                 ).then((delivery) => {
-                  addToast(`Created delivery succesfully!`, {
+                  addToast(`Created delivery successfully!`, {
                     appearance: 'success',
                     autoDismiss: true,
                   });
