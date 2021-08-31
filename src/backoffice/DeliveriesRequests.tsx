@@ -520,7 +520,7 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
                   <tr key={i + 'expanded'}>
                     <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
                       <div>
-                        <img src={row.original.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery image'} />
+                        <img src={row.original.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery'} />
                         <div>Reviewed date: {row.original.reviewed_date}</div>
                         <div>Reviewed by: {row.original.reviewed_by}</div>
                       </div>
@@ -618,7 +618,7 @@ const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loadi
                   </div>
                 </>
               ) : null}
-              <img src={delivery.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery image'} />
+              <img src={delivery.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery'} />
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(1, 1fr)',
