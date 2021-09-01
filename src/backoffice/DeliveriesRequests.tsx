@@ -433,10 +433,10 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
         id: 'card_title',
         Header: 'Title',
         accessor: 'card_title',
-        Cell: ({ value }) => <div className={'left ellipsis'} style={{maxWidth: 100}}>{value}</div>,
+        Cell: ({ value }) => <div className={'center ellipsis'} style={{maxWidth: 'none'}}>{value}</div>,
       },
       { Header: 'Mail', accessor: 'mail', disableSortBy: true,
-        Cell: ({ value }) => <div className={'center'}>{value}</div>,
+        Cell: ({ value }) => <div className={'center'} style={{maxWidth: 'none'}}>{!value || value === '' ? '-' : value}</div>,
       },
       { Header: 'Addresses amount', accessor: 'addresses_amount', disableSortBy: true,
         Cell: ({ value }) => <div className={'center'}>{value}</div>,
@@ -492,12 +492,17 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
       <thead>
         {headerGroups.map((headerGroup, i) => (
           <tr key={i} {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column, j) => (
-              <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])}>
-                {column.render('Header')}
-                {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
-              </th>
-            ))}
+            {headerGroup.headers.map((column, j) => {
+              const style = j===5 ? {width: '160px'}
+                : j===1||j===2 ? {width: '100px'}
+                : j===0 ? {width: '30px'} : {}
+              return (
+                <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])} style={style}>
+                  {column.render('Header')}
+                  {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
+                </th>
+              )
+            })}
           </tr>
         ))}
       </thead>
