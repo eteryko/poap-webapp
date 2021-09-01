@@ -1,22 +1,33 @@
 import React from 'react';
 
 /* Assets */
-import ClaimCover from '../../images/claim_cover_blue.svg';
-import ClaimCoverSuccess from '../../images/claim_cover_green.svg';
 import CheckGreen from '../../images/check_green.svg';
+import ClaimCover from './ClaimCover';
 
 /*
  * @dev: Common header for QR claim system
  * */
-const ClaimHeader: React.FC<{ title: string; eventId: number; image?: string; claimed?: boolean }> = ({
+const ClaimHeader: React.FC<{ title: string; eventId: number; image?: string; claimed?: boolean; color?: string }> = ({
   title,
   eventId,
   image,
-  claimed = true,
+  claimed,
+  color,
 }) => {
+  const colorClaimed = '#84E6B1';
+  const colorNotClaimed = '#ADDEFF';
+
+  const coverColor = (): string => {
+    if (color) {
+      return color;
+    }
+
+    return claimed ? colorClaimed : colorNotClaimed;
+  };
+
   return (
     <div className={'claim-header'}>
-      <img src={claimed ? ClaimCoverSuccess : ClaimCover} alt="cover" className="claim-cover" />
+      <ClaimCover className="claim-cover" color={coverColor()} />
       <div className="claim-title-logo-container">
         <div className="logo-event">
           <img src={image} alt="event" className="logo-img" />

@@ -20,7 +20,6 @@ import { TX_STATUS } from '../lib/constants';
 /* Assets */
 import EmptyBadge from '../images/empty-badge.svg';
 import { TemplateClaimFooter } from './templateClaim/TemplateClaimFooter';
-import { TemplateClaimHeader } from './templateClaim/TemplateClaimHeader';
 import Footer from '../components/Footer';
 
 export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({ match }) => {
@@ -131,21 +130,13 @@ export const CodeClaimPage: React.FC<RouteComponentProps<{ hash: string }>> = ({
         <TemplateClaimLoading />
       ) : (
         <div className={'code-claim-page'}>
-          {!claim?.event_template ? (
-            <ClaimHeader
-              title={title}
-              eventId={eventId}
-              image={image}
-              claimed={!!(claim && claim.tx_status === TX_STATUS.passed) || claimedWithEmail}
-            />
-          ) : (
-            <TemplateClaimHeader
-              title={title}
-              image={image}
-              claimed={(claim && claim.tx_status === TX_STATUS.passed) || claimedWithEmail}
-              claim={claim}
-            />
-          )}
+          <ClaimHeader
+            title={title}
+            eventId={eventId}
+            image={image}
+            claimed={!!(claim && claim.tx_status === TX_STATUS.passed) || claimedWithEmail}
+            color={claim?.event_template?.header_color}
+          />
 
           <div className={`claim-body ${claim?.event_template ? 'template' : ''}`}>{body}</div>
 
