@@ -24,7 +24,7 @@ export const TemplateClaimFooter: FC<Props> = ({ template, claim }) => {
   const templateFooterIcon = useImageSrc(templateFooterIconRaw);
 
   return (
-    <div className="template-claim-footer" style={{ backgroundColor: templateFooterColor || 'purple' }}>
+    <footer className="template-claim-footer" style={{ backgroundColor: templateFooterColor || 'purple' }}>
       <div className="footer-icon-container ">
         {templateFooterIcon && <img className="footer-icon" alt="Brand logo" src={templateFooterIcon} />}
       </div>
@@ -48,6 +48,6 @@ export const TemplateClaimFooter: FC<Props> = ({ template, claim }) => {
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
