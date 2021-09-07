@@ -1,56 +1,56 @@
-import React, { useCallback, useState, ReactElement, useEffect, useMemo, ChangeEvent, ReactNode } from 'react';
-import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
-import classNames from 'classnames';
-import { Formik, Form, Field, ErrorMessage, FieldProps, FormikActions, FormikHandlers, FormikProps } from 'formik';
-import DayPickerInput from 'react-day-picker/DayPickerInput';
-import 'react-day-picker/lib/style.css';
-import { format } from 'date-fns';
-import { useToasts } from 'react-toast-notifications';
-import { useHistory } from 'react-router-dom';
+import React, { ChangeEvent, ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { Link, Route, RouteComponentProps, Switch, useHistory } from "react-router-dom";
+import classNames from "classnames";
+import { ErrorMessage, Field, FieldProps, Form, Formik, FormikActions, FormikHandlers, FormikProps } from "formik";
+import DayPickerInput from "react-day-picker/DayPickerInput";
+import "react-day-picker/lib/style.css";
+import { format } from "date-fns";
+import { useToasts } from "react-toast-notifications";
 
-import { authClient } from 'auth';
+import { authClient } from "auth";
 
 // libraries
-import ReactPaginate from 'react-paginate';
-import { Tooltip } from 'react-lightweight-tooltip';
-import ReactModal from 'react-modal';
+import ReactPaginate from "react-paginate";
+import { Tooltip } from "react-lightweight-tooltip";
+import ReactModal from "react-modal";
 
 /* Components */
-import { SubmitButton } from '../components/SubmitButton';
-import { Loading } from '../components/Loading';
-import FilterButton from '../components/FilterButton';
+import { SubmitButton } from "../components/SubmitButton";
+import { Loading } from "../components/Loading";
+import FilterButton from "../components/FilterButton";
 
 // constants
-import { ROUTES } from 'lib/constants';
+import { ROUTES } from "lib/constants";
 
 // assets
-import { ReactComponent as EditIcon } from 'images/edit.svg';
-import sortDown from 'images/sort-down.png';
-import sortUp from 'images/sort-up.png';
-import infoButton from 'images/info-button.svg';
+import { ReactComponent as EditIcon } from "images/edit.svg";
+import sortDown from "images/sort-down.png";
+import sortUp from "images/sort-up.png";
+import infoButton from "images/info-button.svg";
 
 /* Helpers */
-import { useAsync } from 'react-helpers';
-import { PoapEventSchema, PoapEventSchemaEdit, PoapQrRequestSchema } from 'lib/schemas';
-import { generateSecretCode } from 'lib/helpers';
+import { useAsync } from "react-helpers";
+import { PoapEventSchema, PoapEventSchemaEdit, PoapQrRequestSchema } from "lib/schemas";
+import { generateSecretCode } from "lib/helpers";
 import {
-  Template,
-  PoapFullEvent,
-  PoapEvent,
+  createEvent,
+  EventFilter,
+  getActiveRedeemRequests,
   getEventByFancyId,
   getEventById,
   getPaginatedEvents,
-  updateEvent,
-  createEvent,
   getTemplates,
-  postQrRequests,
-  getActiveQrRequests,
   PaginatedEvent,
-  SortDirection,
+  PoapEvent,
+  PoapFullEvent,
+  postRedeemRequests,
+  RedeemRequestType,
   SortCondition,
-  EventFilter,
-} from '../api';
-import FormFilterReactSelect from 'components/FormFilterReactSelect';
+  SortDirection,
+  Template,
+  updateEvent
+} from "../api";
+import FormFilterReactSelect from "components/FormFilterReactSelect";
 
 type EventEditValues = {
   name: string;
@@ -77,7 +77,7 @@ type QrRequestModalProps = {
   setIsActiveQrRequest: (id: number) => void;
   eventId?: number;
   secretCode?: number;
-  isWebsitesRequest: boolean;
+  type: RedeemRequestType;
 };
 
 type QrRequestFormikValues = {
@@ -221,8 +221,8 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const isAdmin = authClient.isAuthenticated();
 
   const checkActiveQrRequest = async (id: number) => {
-    const { active } = await getActiveQrRequests(id);
-    if (active > 0) {
+    const active = await getActiveRedeemRequests(id, RedeemRequestType.qr);
+    if (active.length > 0) {
       setIsActiveQrRequest(true);
     } else {
       setIsActiveQrRequest(false);
@@ -497,7 +497,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                       eventId={event?.id}
                       handleModalClose={handleQrRequestModalRequestClose}
                       setIsActiveQrRequest={checkActiveQrRequest}
-                      isWebsitesRequest={false}
+                      type={RedeemRequestType.qr}
                     />
                   </ReactModal>
                 </>
@@ -668,7 +668,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
   secretCode,
   handleModalClose,
   setIsActiveQrRequest,
-  isWebsitesRequest,
+  type,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
@@ -677,7 +677,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
     setIsSubmitting(true);
     const { requested_codes, secret_code } = values;
     if (eventId) {
-      await postQrRequests(eventId, requested_codes, secret_code, isWebsitesRequest)
+      await postRedeemRequests(eventId, requested_codes, secret_code, type)
         .then((_) => {
           setIsSubmitting(false);
           addToast('QR Request created correctly', {

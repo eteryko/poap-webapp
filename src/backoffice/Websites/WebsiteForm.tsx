@@ -1,32 +1,33 @@
-import React, { FC, useState, useEffect, useMemo } from 'react';
-import { useToasts } from 'react-toast-notifications';
-import { Formik, Form, FormikActions } from 'formik';
-import QRCode from 'qrcode.react';
-import PoapQrLogo from '../../images/poap_qr.png';
+import React, { FC, useEffect, useMemo, useState } from "react";
+import { useToasts } from "react-toast-notifications";
+import { Form, Formik, FormikActions } from "formik";
+import QRCode from "qrcode.react";
+import PoapQrLogo from "../../images/poap_qr.png";
 
 /* Helpers */
-import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest } from '../../lib/schemas';
+import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest } from "../../lib/schemas";
 import {
-  Website,
-  getWebsiteByEventIdAndSecretCode,
   createWebsite,
-  updateWebsite,
-  getActiveQrRequests,
+  getActiveRedeemRequests,
   getEventById,
+  getWebsiteByEventIdAndSecretCode,
   PoapEvent,
-} from '../../api';
+  RedeemRequestType,
+  updateWebsite,
+  Website
+} from "../../api";
 
 /* Components */
-import { SubmitButton } from '../../components/SubmitButton';
-import { EventField, QrRequestModal } from '../EventsPage';
-import { Loading } from '../../components/Loading';
-import DatePicker, { DatePickerDay, SetFieldValue } from '../../components/DatePicker';
-import { format, isAfter } from 'date-fns';
-import FormFilterReactSelect from '../../components/FormFilterReactSelect';
-import { timezones } from '../Checkouts/_helpers/Timezones';
-import ReactModal from 'react-modal';
-import { Tooltip } from 'react-lightweight-tooltip';
-import { Button } from '../../components/Button';
+import { SubmitButton } from "../../components/SubmitButton";
+import { EventField, QrRequestModal } from "../EventsPage";
+import { Loading } from "../../components/Loading";
+import DatePicker, { DatePickerDay, SetFieldValue } from "../../components/DatePicker";
+import { format, isAfter } from "date-fns";
+import FormFilterReactSelect from "../../components/FormFilterReactSelect";
+import { timezones } from "../Checkouts/_helpers/Timezones";
+import ReactModal from "react-modal";
+import { Tooltip } from "react-lightweight-tooltip";
+import { Button } from "../../components/Button";
 
 /* Types */
 type WebsiteFormType = {
@@ -280,8 +281,8 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   };
 
   const checkActiveQrRequest = async (id: number) => {
-    const { active } = await getActiveQrRequests(id);
-    if (active > 0) {
+    const active = await getActiveRedeemRequests(id, RedeemRequestType.website);
+    if (active.length > 0) {
       setIsActiveQrRequest(true);
     } else {
       setIsActiveQrRequest(false);
@@ -307,7 +308,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
         <QrRequestModal
           eventId={eventId}
           secretCode={secretCode}
-          isWebsitesRequest={true}
+          type={RedeemRequestType.website}
           handleModalClose={handleQrRequestModalRequestClose}
           setIsActiveQrRequest={checkActiveQrRequest}
         />
@@ -423,12 +424,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                     <div className={'date-row'}>
                       <div className={'col-xs-12'}>
                         <EventField title={'Requested Codes'} name={'codesQuantity'} type={'number'} disabled={edit} />
-                        {isActiveQrRequest && (
-                          <p className={'warning-text'}>
-                            There’s a pending code request for this website. If you select a number different than zero,
-                            the previous request will be updated to the new value.
-                          </p>
-                        )}
                       </div>
                     </div>
                   )}

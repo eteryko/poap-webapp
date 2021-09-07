@@ -49,18 +49,29 @@ export interface PoapEvent {
   email?: string;
 }
 
-export interface QrRequest {
+export interface RedeemRequest {
   id: number;
   event_id: number;
-  website_request: boolean;
   requested_codes: number;
   accepted_codes: number;
+  type: RedeemRequestType;
   created_date: string;
   reviewed: boolean;
   reviewed_by?: string;
   reviewed_date?: string;
   event: PoapEvent;
   eventWebsite?: EventWebsite;
+}
+
+export interface RedeemRequestCount {
+  active: number;
+  type: RedeemRequestType;
+}
+
+export enum RedeemRequestType {
+  qr = 'qr',
+  website = 'website',
+  secret = 'secret',
 }
 
 export interface EventWebsite {
@@ -303,15 +314,11 @@ export type PaginatedQrCodes = {
   qr_claims: QrCode[];
 };
 
-export type PaginatedQrRequest = {
+export type PaginatedRedeemRequest = {
   limit: number;
   offset: number;
   total: number;
-  qr_requests: QrRequest[];
-};
-
-export type ActiveQrRequest = {
-  active: number;
+  redeem_requests: RedeemRequest[];
 };
 
 export type ENSQueryResult = { valid: false } | { valid: true; ens: string };
@@ -436,14 +443,14 @@ export async function getEvents(expired?: boolean): Promise<PoapEvent[]> {
   return authClient.isAuthenticated() ? secureFetch(url) : fetchJson(url);
 }
 
-export async function getQrRequests(
+export async function getRedeemRequests(
   limit: number,
   offset: number,
   reviewed?: boolean,
   event_id?: number,
   sort_condition?: SortCondition,
-  website_request?: boolean,
-): Promise<PaginatedQrRequest> {
+  redeem_type?: string,
+): Promise<PaginatedRedeemRequest> {
   const sort_by = sort_condition?.sort_by;
   const sort_direction = sort_condition?.sort_direction;
 
@@ -455,59 +462,62 @@ export async function getQrRequests(
       reviewed,
       sort_by,
       sort_direction,
-      website_request,
+      redeem_type,
     },
     { sort: false },
   );
   try {
     return authClient.isAuthenticated()
-      ? secureFetch(`${API_BASE}/qr-requests?${params}`)
-      : fetchJson(`${API_BASE}/qr-requests?${params}`);
+      ? secureFetch(`${API_BASE}/redeem-requests?${params}`)
+      : fetchJson(`${API_BASE}/redeem-requests?${params}`);
   } catch (e) {
     return e;
   }
 }
 
-export async function postQrRequests(
+export async function postRedeemRequests(
   event_id: number,
   requested_codes: number,
   secret_code: number,
-  website_request: boolean,
+  redeem_type: RedeemRequestType,
 ): Promise<void> {
   const body = JSON.stringify({
     event_id,
     requested_codes,
     secret_code,
-    website_request,
+    redeem_type,
   });
 
   return authClient.isAuthenticated()
-    ? secureFetch(`${API_BASE}/qr-requests`, {
-      method: 'POST',
-      body,
-      headers: { 'Content-Type': 'application/json' },
-    })
-    : fetchJson(`${API_BASE}/qr-requests`, {
-      method: 'POST',
-      body,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    ? secureFetch(`${API_BASE}/redeem-requests`, {
+        method: 'POST',
+        body,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    : fetchJson(`${API_BASE}/redeem-requests`, {
+        method: 'POST',
+        body,
+        headers: { 'Content-Type': 'application/json' },
+      });
 }
 
-export async function getActiveQrRequests(event_id?: number): Promise<ActiveQrRequest> {
-  const params = queryString.stringify({ event_id }, { sort: false });
+export async function getActiveRedeemRequests(
+  event_id?: number,
+  type?: RedeemRequestType,
+): Promise<RedeemRequestCount[]> {
+  const params = queryString.stringify({ event_id, type }, { sort: false });
   try {
     return authClient.isAuthenticated()
-      ? secureFetch(`${API_BASE}/qr-requests/active/count?${params}`)
-      : fetchJson(`${API_BASE}/qr-requests/active/count?${params}`);
+      ? secureFetch(`${API_BASE}/redeem-requests/active/count?${params}`)
+      : fetchJson(`${API_BASE}/redeem-requests/active/count?${params}`);
   } catch (e) {
     return e;
   }
 }
 
-export async function setQrRequests(id: number, accepted_codes: number): Promise<void> {
+export async function updateRedeemRequests(id: number, accepted_codes: number): Promise<void> {
   try {
-    return secureFetch(`${API_BASE}/qr-requests/${id}`, {
+    return secureFetch(`${API_BASE}/redeem-requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
         id,
