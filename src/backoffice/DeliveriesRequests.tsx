@@ -1,4 +1,4 @@
-import React, { CSSProperties, FC, useEffect, useState } from 'react';
+import React, { CSSProperties, FC, HTMLAttributes, useEffect, useState } from 'react';
 
 /* Libraries */
 import ReactPaginate from 'react-paginate';
@@ -10,7 +10,7 @@ import { useToasts } from 'react-toast-notifications';
 import { Loading } from '../components/Loading';
 import FilterSelect from '../components/FilterSelect';
 import { SubmitButton } from '../components/SubmitButton';
-import { Column, SortingRule, useExpanded, useSortBy, useTable } from 'react-table';
+import { Column, Row, SortingRule, useExpanded, useSortBy, useTable } from 'react-table';
 
 /* Helpers */
 import {
@@ -185,18 +185,18 @@ const DeliveriesRequests: FC = () => {
   const getTableData = (): DeliveryTableData[] => {
     return _deliveries.map((delivery) => {
       const ids = delivery.event_ids.split(',').map((e) => parseInt(e, 10))
-      let main_event_id = isNaN(ids[0]) ? -1 : ids[0]
+      const { id, card_title, approved, reviewed_date, reviewed_by, mail, addresses_amount, image } = delivery
       return {
-        id: delivery.id,
-        card_title: delivery.card_title,
+        id,
+        card_title,
         event_ids: ids,
-        reviewed_date: delivery.approved && delivery.reviewed_date ? formatDate(new Date(delivery.reviewed_date).toDateString()) : '-',
-        reviewed_by: delivery.approved && delivery.reviewed_by ? delivery.reviewed_by : '-',
-        main_event_id: main_event_id,
-        mail: delivery.mail,
-        addresses_amount: delivery.addresses_amount,
-        approved: delivery.approved !== undefined ? delivery.approved : null,
-        image: delivery.image,
+        reviewed_date: approved && reviewed_date ? formatDate(new Date(reviewed_date).toDateString()) : '-',
+        reviewed_by: approved && reviewed_by ? reviewed_by : '-',
+        main_event_id: isNaN(ids[0]) ? -1 : ids[0],
+        mail,
+        addresses_amount,
+        approved: approved !== undefined ? approved : null,
+        image,
       };
     });
   };
@@ -487,17 +487,43 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
+  const RowContent: React.FC<{row: Row<DeliveryTableData>}> = ({row}) => {
+    const RowDiv: React.FC<{style?: HTMLAttributes<any>['style']}> = ({children, style}) => {
+      return <div className='delivery-request-row-div no-max-width' style={style}>{children}</div>
+    }
+    return (<>
+      <RowDiv>
+        <img src={row.original.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery'} />
+        <div className='no-max-width'>Reviewed date: {row.original.reviewed_date}</div>
+        <div className='no-max-width'>Reviewed by: {row.original.reviewed_by}</div>
+      </RowDiv>
+      <RowDiv style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(1, 1fr)',
+        border: '3px solid lightgrey',
+        padding: 15
+      }}>{
+        row.original.event_ids.map((id, i) => (
+          <div className='no-max-width' key={i + 'subcomponentDiv' + id}>
+            <EventSubComponent key={i + 'subcomponent' + id} eventId={id} />
+            {i !== row.original.event_ids.length-1 && <hr key={i + 'subcomponentHr' + id}/>}
+          </div>
+        ))
+      }</RowDiv>
+    </>)
+  }
+
   return (
     <table className={'backoffice-table fluid'} {...getTableProps()}>
       <thead>
         {headerGroups.map((headerGroup, i) => (
           <tr key={i} {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column, j) => {
-              const style = j===5 ? {width: '160px'}
-                : j===1||j===2 ? {width: '100px'}
-                : j===0 ? {width: '30px'} : {}
+            {headerGroup.headers.map((column, columnIndex) => {
+              const style = columnIndex===5 ? {width: '160px'}
+                : columnIndex===1||columnIndex===2 ? {width: '100px'}
+                : columnIndex===0 ? {width: '30px'} : {}
               return (
-                <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])} style={style}>
+                <th key={columnIndex} {...column.getHeaderProps([column.getSortByToggleProps()])} style={style}>
                   {column.render('Header')}
                   {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
                 </th>
@@ -524,24 +550,7 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
                 {row.isExpanded ? (
                   <tr key={i + 'expanded'}>
                     <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
-                      <div>
-                        <img src={row.original.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery'} />
-                        <div>Reviewed date: {row.original.reviewed_date}</div>
-                        <div>Reviewed by: {row.original.reviewed_by}</div>
-                      </div>
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(1, 1fr)',
-                        border: '3px solid lightgrey',
-                        padding: 15
-                      }}>{
-                        row.original.event_ids.map((id, i) => (
-                          <div key={i + 'subcomponentDiv' + id}>
-                            <EventSubComponent key={i + 'subcomponent' + id} eventId={id} />
-                            {i !== row.original.event_ids.length-1 && <hr key={i + 'subcomponentHr' + id}/>}
-                          </div>
-                        ))
-                      }</div>
+                      <RowContent row={row} />
                     </td>
                   </tr>
                 ) : null}
@@ -576,14 +585,20 @@ const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId }) => {
     getEvent().then()
   }, [eventId])
 
+  const Line: React.FC<{}> = ({ children }) => {
+    return (
+      <div style={{width: '70%'}} className='no-max-width'>{children}</div>
+    )
+  }
+
   return (
     event ?
-    <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }} className={'subcomponent'}>
+    <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }} className={'subcomponent no-max-width'}>
       <h4 style={{ fontWeight: 500 }}>
         {`from ${dateFormatter(event.start_date)} to ${dateFormatter(event.end_date)}. Expires ${dateFormatter(event.expiry_date)}`}
       </h4>
-      <div style={{ width: '70%' }}>Id: <a href={`https://poap.gallery/event/${event.id}`} style={{display: 'inline-flex'}} rel="noopener noreferrer" target="_blank">{event.id}</a></div>
-      <div style={{ width: '70%' }}>Email: {!event.email || event.email === '' ? 'No registered email' : event.email}</div>
+      <Line>Id: <a href={`https://poap.gallery/event/${event.id}`} style={{display: 'inline-flex'}} rel="noopener noreferrer" target="_blank">{event.id}</a></Line>
+      <Line>Email: {!event.email || event.email === '' ? 'No registered email' : event.email}</Line>
     </div> : null
   );
 };

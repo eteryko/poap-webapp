@@ -1309,10 +1309,10 @@ table.backoffice-table {
 
         &.subcomponent {
           max-width: none;
-          div, a, span {
+          .no-max-width {
             max-width: none;
           }
-          div {
+          .delivery-request-row-div {
             display: block;
           }
         }
