@@ -167,7 +167,7 @@ const DeliveriesRequests: FC = () => {
     setIsRebuilding(true)
 
     await rebuildDeliveries().then((_) => {
-      addToast(`poap.delivery rebuilt succesfully`, {
+      addToast(`poap.delivery rebuilt successfully`, {
         appearance: 'success',
         autoDismiss: true,
       });
@@ -206,7 +206,7 @@ const DeliveriesRequests: FC = () => {
       <div style={{display: 'flex'}}>
         <h2>Manage Deliveries Requests</h2>
         <SubmitButton className='small' style={{margin: '0 0 2rem auto', minWidth: 100}} canSubmit={!isRebuilding} isSubmitting={isRebuilding} text={'Rebuild'} onClick={() => {
-          rebuildDeliveriesPage()
+          rebuildDeliveriesPage().then()
         }} />
       </div>
       <div className={'filters-container qr'}>
@@ -585,7 +585,7 @@ const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId }) => {
     getEvent().then()
   }, [eventId])
 
-  const Line: React.FC<{}> = ({ children }) => {
+  const Line: React.FC = ({ children }) => {
     return (
       <div style={{width: '70%'}} className='no-max-width'>{children}</div>
     )
