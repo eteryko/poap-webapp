@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { useToasts } from 'react-toast-notifications';
 
 /* Helpers */
-import { getEventById, getEvents, getWebsiteByName, getWebsites, PoapEvent, Website } from '../../api';
+import { getEventById, getEvents, getSecretByName, getSecrets, PoapEvent, Website } from '../../api';
 
 /* Components */
 import { Loading } from '../../components/Loading';
@@ -62,7 +62,7 @@ const SecretList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
   const fetchWebsites = async () => {
     setIsFetching(true);
     try {
-      const response = await getWebsites(limit, page * limit, activeStatus, timeframe);
+      const response = await getSecrets(limit, page * limit, activeStatus, timeframe);
       if (response) {
         setSecrets(response.websites);
         setTotal(response.total);
@@ -134,7 +134,7 @@ const SecretList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
 
   const handleEditOnClick = async (claimName: string): Promise<void> => {
     setIsFetching(true);
-    const website = await getWebsiteByName(claimName);
+    const website = await getSecretByName(claimName);
     if (website.event_id) {
       const event = await getEventById(website.event_id);
       setIsFetching(false);

@@ -1217,11 +1217,12 @@ export type WebsiteClaimUrl = {
   time: Date;
 };
 
-export function getWebsites(
+export function getSecrets(
   limit: number,
   offset: number,
   active: boolean | null,
   timeframe: string | null,
+  type?: string
 ): Promise<PaginatedWebsites> {
   let paramsObject: any = { limit, offset };
 
@@ -1233,24 +1234,28 @@ export function getWebsites(
     paramsObject['timeframe'] = timeframe;
   }
 
+  if (type !== undefined) {
+    paramsObject['type'] = type; //TODO: test endpoint
+  }
+
   const params = queryString.stringify(paramsObject);
-  return secureFetch(`${API_BASE}/websites?${params}`);
+  return secureFetch(`${API_BASE}/secrets?${params}`);
 }
 
-export function getWebsiteByEventIdAndSecretCode(eventId: number, secret_code?: number): Promise<Website> {
+export function getSecretByEventIdAndSecretCode(eventId: number, secret_code?: number): Promise<Website> {
   const body = JSON.stringify(secret_code ? { secret_code } : {});
   const payload: RequestInit = {
     method: 'POST',
     body,
     headers: { 'Content-Type': 'application/json' },
   };
-  const url = `${API_BASE}/website/event/id/${eventId}`;
+  const url = `${API_BASE}/secret/event/id/${eventId}`; //TODO: test endpoint
 
   return authClient.isAuthenticated() ? secureFetch(url, payload) : fetchJson(url, payload);
 }
 
-export function getWebsiteByName(claimName: string): Promise<Website> {
-  return secureFetch(`${API_BASE}/website/${claimName}`);
+export function getSecretByName(claimName: string): Promise<Website> {
+  return secureFetch(`${API_BASE}/secret/${claimName}`); //TODO: test endpoint
 }
 
 export function getWebsiteClaimUrls(claimName: string, claimed?: boolean): Promise<WebsiteClaimUrl[]> {
@@ -1261,7 +1266,7 @@ export function getWebsiteClaimUrls(claimName: string, claimed?: boolean): Promi
   return secureFetch(`${API_WEBSITES}/admin/delivery/${claimName}`);
 }
 
-export async function createWebsite(
+export async function createSecret(
   event_id: number,
   claim_name: string,
   requested_codes: number,
@@ -1271,7 +1276,9 @@ export async function createWebsite(
   captcha?: boolean,
   active?: boolean,
   secret_code?: number,
+  type?: string,
 ): Promise<Website> {
+  const _type = type ? type : "website"
   const body = JSON.stringify({
     event_id,
     secret_code,
@@ -1280,6 +1287,7 @@ export async function createWebsite(
     timezone,
     from,
     to,
+    _type,
     captcha,
     active,
   });
@@ -1290,12 +1298,12 @@ export async function createWebsite(
     headers: { 'Content-Type': 'application/json' },
   };
 
-  const url: string = `${API_BASE}/website-requests`;
+  const url: string = `${API_BASE}/secret-requests`; //TODO: test endpoint
 
   return authClient.isAuthenticated() ? await secureFetch(url, payload) : await fetchJson(url, payload);
 }
 
-export async function updateWebsite(
+export async function updateSecret(
   event_id: number,
   claim_name: string,
   from: string,
@@ -1304,13 +1312,16 @@ export async function updateWebsite(
   captcha?: boolean,
   active?: boolean,
   secret_code?: number,
+  type?: string,
 ): Promise<Website> {
+  const _type = type ? type : "website"
   const body = JSON.stringify({
     event_id,
     claim_name,
     timezone,
     from,
     to,
+    _type, //TODO: aca y en get/create/etc si esta vacio poner "website" o lo dejo vacio?
     captcha,
     active,
     secret_code,
@@ -1323,7 +1334,7 @@ export async function updateWebsite(
     headers: { 'Content-Type': 'application/json' },
   };
 
-  const url = `${API_BASE}/website-requests`;
+  const url = `${API_BASE}/secret-requests`; //TODO: test endpoint
 
   return authClient.isAuthenticated() ? await secureFetch(url, payload) : await fetchJson(url, payload);
 }

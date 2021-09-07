@@ -8,10 +8,10 @@ import PoapQrLogo from '../../images/poap_qr.png';
 import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest } from '../../lib/schemas';
 import {
   Website,
-  getWebsiteByEventIdAndSecretCode,
+  getSecretByEventIdAndSecretCode,
   getActiveQrRequests,
   getEventById,
-  PoapEvent, updateWebsite, createWebsite,
+  PoapEvent, updateSecret, createSecret,
 } from '../../api';
 
 /* Components */
@@ -151,7 +151,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
 
   const fetchWebsite = async () => {
     try {
-      const _website = await getWebsiteByEventIdAndSecretCode(eventId, secretCode);
+      const _website = await getSecretByEventIdAndSecretCode(eventId, secretCode);
       setWebsite(_website);
     } catch (e) {
       //do nothing
@@ -193,7 +193,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
 
       try {
         if (!edit) {
-          await createWebsite(
+          await createSecret(
             eventId,
             secretWord,
             codesQuantity,
@@ -203,18 +203,19 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             undefined,
             activeWebsite,
             secretCode,
+            "word",
           );
 
-          const website = await getWebsiteByEventIdAndSecretCode(eventId, secretCode);
+          const website = await getSecretByEventIdAndSecretCode(eventId, secretCode);
 
           setWebsite(website);
 
-          addToast('Website created correctly', {
+          addToast('Secret created correctly', {
             appearance: 'success',
             autoDismiss: true,
           });
         } else {
-          await updateWebsite(
+          await updateSecret(
             eventId,
             secretWord,
             startDateTime.toISOString(),
@@ -223,9 +224,10 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             undefined,
             activeWebsite,
             secretCode,
+            "word",
           );
 
-          addToast('Website updated correctly', {
+          addToast('Secret updated correctly', {
             appearance: 'success',
             autoDismiss: true,
           });

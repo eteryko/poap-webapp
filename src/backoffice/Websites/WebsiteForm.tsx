@@ -8,9 +8,9 @@ import PoapQrLogo from '../../images/poap_qr.png';
 import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest } from '../../lib/schemas';
 import {
   Website,
-  getWebsiteByEventIdAndSecretCode,
-  createWebsite,
-  updateWebsite,
+  getSecretByEventIdAndSecretCode,
+  createSecret,
+  updateSecret,
   getActiveQrRequests,
   getEventById,
   PoapEvent,
@@ -158,7 +158,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
 
   const fetchWebsite = async () => {
     try {
-      const _website = await getWebsiteByEventIdAndSecretCode(eventId, secretCode);
+      const _website = await getSecretByEventIdAndSecretCode(eventId, secretCode);
       setWebsite(_website);
     } catch (e) {
       //do nothing
@@ -201,7 +201,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
 
       try {
         if (!edit) {
-          await createWebsite(
+          await createSecret(
             eventId,
             claimName,
             codesQuantity,
@@ -213,7 +213,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             secretCode,
           );
 
-          const website = await getWebsiteByEventIdAndSecretCode(eventId, secretCode);
+          const website = await getSecretByEventIdAndSecretCode(eventId, secretCode);
 
           setWebsite(website);
 
@@ -222,7 +222,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             autoDismiss: true,
           });
         } else {
-          await updateWebsite(
+          await updateSecret(
             eventId,
             claimName,
             startDateTime.toISOString(),
