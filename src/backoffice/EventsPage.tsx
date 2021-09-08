@@ -204,7 +204,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const dateFormatter = (day: Date | number) => format(day, 'MM-dd-yyyy');
   const dateFormatterString = (date: string) => {
     const parts = date.split('-');
-    return new Date(`${parts[2]}/${parts[0]}/${parts[1]}`);
+    return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
   };
 
   const fetchTemplates = useCallback(() => getTemplates({ limit: 1000 }), []);
@@ -550,8 +550,8 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   dayToSetup="start_date"
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
-                  placeholder={values.start_date.replace(/-/g, "/")}
-                  value={values.start_date !== '' ? new Date(values.start_date.replace(/-/g, "/")) : ''}
+                  placeholder={values.start_date}
+                  value={values.start_date !== '' ? new Date(dateFormatterString(values.start_date).getTime()) : ''}
                   disabled={false}
                   disabledDays={
                     values.end_date !== ''
