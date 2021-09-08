@@ -6,11 +6,6 @@ import { slide as Menu } from 'react-burger-menu';
 // lib
 import { AuthContext, authClient } from 'auth';
 
-/* Assets */
-import Calendar from 'images/calendar.svg';
-import Qr from 'images/qr-code.svg';
-import Requests from 'images/request.svg';
-
 /* Constants */
 import { ROUTES, LABELS } from '../lib/constants';
 
@@ -30,6 +25,9 @@ import { AdminLogsPage } from './AdminLogsPage';
 import { DeliveriesRequests } from './DeliveriesRequests';
 import { WebsitesManage } from './Websites/WebsitesManage';
 import Header from '../components/Header';
+import Landing from './Landing';
+
+import Cover from '../images/scan-cover.svg';
 
 export const MintersPage = () => <div> This is a MintersPage </div>;
 
@@ -135,34 +133,6 @@ export const NavigationMenu = withRouter(({ history }) => {
   );
 });
 
-const Landing = () => {
-  const isAdmin = authClient.isAuthenticated();
-  return (
-    <div className={'cards-container'}>
-      <Link to={ROUTES.events.path} className={'card card-link'}>
-        <h3>Manage Events</h3>
-        <img className={'icon'} src={Calendar} alt={'Manage Events'} />
-      </Link>
-      {isAdmin && (
-        <>
-          <Link to={ROUTES.codes.path} className={'card card-link'}>
-            <h3>Manage Codes</h3>
-            <img className={'icon'} src={Qr} alt={'Manage QR Codes'} />
-          </Link>
-          <Link to={ROUTES.codesRequest.path} className={'card card-link'}>
-            <h3>Manage Codes Requests</h3>
-            <img className={'icon'} src={Requests} alt={'Manage QR Requests'} />
-          </Link>
-          <Link to={ROUTES.deliveries.requests.path} className={'card card-link'}>
-            <h3>Manage Deliveries Requests</h3>
-            <img className={'icon'} src={Requests} alt={'Manage Deliveries Requests'} />
-          </Link>
-        </>
-      )}
-    </div>
-  );
-};
-
 const IssueForEventPageWithAuthentication = withAuthentication(IssueForEventPage);
 const IssueForUserPageWithAuthentication = withAuthentication(IssueForUserPage);
 const TransactionsPageWithAuthentication = withAuthentication(TransactionsPage);
@@ -176,7 +146,9 @@ const AdminLogsPageWithAuthentication = withAuthentication(AdminLogsPage);
 
 export const BackOffice: React.FC = () => (
   <>
+    <NavigationMenu />
     <Header sectionName={'Backoffice'} />
+    <img src={Cover} alt="cover" className="backoffice-cover" />
     <main className="app-content backoffice">
       <div className="container">
         <Switch>
@@ -224,7 +196,5 @@ export const BackOffice: React.FC = () => (
         </Switch>
       </div>
     </main>
-
-    <NavigationMenu />
   </>
 );

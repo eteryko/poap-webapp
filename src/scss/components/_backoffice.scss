@@ -213,6 +213,76 @@
   }
 }
 
+.backoffice-cover {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+}
+
+.backoffice-landing {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  width: 372px;
+  height: 253px;
+  box-shadow: 0 4px 16px rgba(187, 196, 239, 0.35);
+  border-radius: 20px;
+  margin: 15px;
+  transition: box-shadow 0.3s ease-in-out;
+
+  .card-url {
+    width: 100%;
+    text-decoration: none;
+  }
+
+  .card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 23px;
+
+    .card-cover {
+      position: absolute;
+      z-index: 0;
+    }
+
+    .card-image-container {
+      position: relative;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 139px;
+      height: 139px;
+      border-radius: 50%;
+      margin-top: 29px;
+      background-color: white;
+      box-shadow: 0 4px 16px rgba(187, 196, 239, 0.35);
+    }
+  }
+
+  .card-title {
+    font-family: $font-family-title;
+    font-style: normal;
+    font-weight: 1;
+    font-size: 22px;
+    line-height: 27px;
+    text-align: center;
+    letter-spacing: 0.01em;
+    color: $violet2;
+  }
+}
+
+.card-container:hover {
+  box-shadow: 0 25px 25px rgba(187, 196, 239, 0.35);
+}
+
 .avatar {
   max-width: 36px;
   border-radius: 50%;

@@ -80,6 +80,8 @@
 
       .pull-left {
         .logo {
+          position: relative;
+          z-index: 1000;
           width: 63px;
           height: 82.74px;
           margin-right: 16px;
