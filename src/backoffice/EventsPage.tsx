@@ -557,7 +557,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.start_date}
-                  value={values.start_date !== '' ? new Date(dateFormatterSafaryString(values.start_date).getTime()) : ''}
+                  value={values.start_date !== '' ? new Date(dateFormatterSafaryString(values.start_date)) : ''}
                   disabled={false}
                   disabledDays={
                     values.end_date !== ''
@@ -574,7 +574,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.end_date}
-                  value={values.end_date !== '' ? new Date(dateFormatterSafaryString(values.end_date).getTime()) : ''}
+                  value={values.end_date !== '' ? new Date(dateFormatterSafaryString(values.end_date)) : ''}
                   disabled={!multiDay}
                   disabledDays={
                     values.start_date !== ''
@@ -592,7 +592,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   setFieldValue={setFieldValue}
                   placeholder={values.expiry_date}
                   helpText="After this date, users will no longer be able to mint this event's POAP"
-                  value={values.expiry_date !== '' ? new Date(dateFormatterSafaryString(values.expiry_date).getTime()) : ''}
+                  value={values.expiry_date !== '' ? new Date(dateFormatterSafaryString(values.expiry_date)) : ''}
                   disabled={!values.end_date}
                   disabledDays={
                     values.end_date !== ''
