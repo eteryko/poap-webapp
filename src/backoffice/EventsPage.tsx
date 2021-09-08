@@ -206,7 +206,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
     const parts = date.split('-');
     return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
   };
-
+  
   const dateFormatterSafaryString = (date: string) => {
     const parts = date.split('-');
     return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`.replace(/-/g, "/"));
@@ -556,8 +556,8 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   dayToSetup="start_date"
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
-                  placeholder={values.start_date}
-                  value={values.start_date !== '' ? new Date(dateFormatterSafaryString(values.start_date)) : ''}
+                  placeholder={values.start_date.replace(/-/g, "/")}
+                  value={values.start_date !== '' ? new Date(values.start_date.replace(/-/g, "/")) : ''}
                   disabled={false}
                   disabledDays={
                     values.end_date !== ''
@@ -574,7 +574,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.end_date}
-                  value={values.end_date !== '' ? new Date(dateFormatterSafaryString(values.end_date)) : ''}
+                  value={values.end_date !== '' ? new Date(dateFormatterString(values.end_date).getTime()) : ''}
                   disabled={!multiDay}
                   disabledDays={
                     values.start_date !== ''
@@ -592,7 +592,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   setFieldValue={setFieldValue}
                   placeholder={values.expiry_date}
                   helpText="After this date, users will no longer be able to mint this event's POAP"
-                  value={values.expiry_date !== '' ? new Date(dateFormatterSafaryString(values.expiry_date)) : ''}
+                  value={values.expiry_date !== '' ? new Date(dateFormatterString(values.expiry_date).getTime()) : ''}
                   disabled={!values.end_date}
                   disabledDays={
                     values.end_date !== ''
