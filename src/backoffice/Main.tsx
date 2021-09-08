@@ -28,6 +28,7 @@ import Header from '../components/Header';
 import Landing from './Landing';
 
 import Cover from '../images/scan-cover.svg';
+import BackofficeFooter from './BackofficeFooter';
 
 export const MintersPage = () => <div> This is a MintersPage </div>;
 
@@ -193,6 +194,7 @@ export const BackOffice: React.FC = () => (
           <Route path="*" render={() => <Redirect to="/admin" />} />
         </Switch>
       </div>
+      <BackofficeFooter />
     </main>
   </>
 );
