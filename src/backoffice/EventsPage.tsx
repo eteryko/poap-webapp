@@ -204,7 +204,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const dateFormatter = (day: Date | number) => format(day, 'MM-dd-yyyy');
   const dateFormatterString = (date: string) => {
     const parts = date.split('-');
-    return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+    return new Date(`${parts[2]}/${parts[0]}/${parts[1]}`);
   };
 
   const fetchTemplates = useCallback(() => getTemplates({ limit: 1000 }), []);
