@@ -206,12 +206,6 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
     const parts = date.split('-');
     return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
   };
-  
-  const dateFormatterSafaryString = (date: string) => {
-    const parts = date.split('-');
-    return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`.replace(/-/g, "/"));
-  };
-
 
   const fetchTemplates = useCallback(() => getTemplates({ limit: 1000 }), []);
   const [templates, fetchingTemplates] = useAsync(fetchTemplates);
