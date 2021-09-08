@@ -795,6 +795,7 @@ const DayPickerContainer = ({
           </span>
         )}
       </label>
+      {_value.toLocaleString()}
       <DayPickerInput
         placeholder={placeholder}
         dayPickerProps={{ disabledDays }}
