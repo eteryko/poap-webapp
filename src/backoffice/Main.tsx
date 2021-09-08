@@ -83,38 +83,36 @@ export const NavigationMenu = withRouter(({ history }) => {
         <>
           <Label label={LABELS.issueBadges} />
           <SidebarLink route={ROUTES.issueForEvent} handleClick={closeMenu} />
-
           <SidebarLink route={ROUTES.issueForUser} handleClick={closeMenu} />
-
-          <Label label={LABELS.otherTasks} />
-
-          <SidebarLink route={ROUTES.addressManagement} handleClick={closeMenu} />
-
-          <SidebarLink route={ROUTES.burn} handleClick={closeMenu} />
-
-          <SidebarLink route={ROUTES.transactions} handleClick={closeMenu} />
-
-          <SidebarLink route={ROUTES.checkouts.admin} handleClick={closeMenu} />
-
-          <SidebarLink route={ROUTES.adminLogs} handleClick={closeMenu} />
         </>
       )}
 
-      {!isAdmin && <Label label={LABELS.menu} />}
+      <Label label={LABELS.manage} />
+
+      {isAdmin && (
+        <>
+          <SidebarLink route={ROUTES.addressManagement} handleClick={closeMenu} />
+          <SidebarLink route={ROUTES.codesRequest} handleClick={closeMenu} />
+          <SidebarLink route={ROUTES.deliveries.requests} handleClick={closeMenu} />
+        </>
+      )}
 
       <SidebarLink route={ROUTES.websites.websitesManage} handleClick={closeMenu} />
-
       <SidebarLink route={ROUTES.events} handleClick={closeMenu} />
-
       <SidebarLink route={ROUTES.codes} handleClick={closeMenu} />
-
       <SidebarLink route={ROUTES.deliveries.admin} handleClick={closeMenu} />
-
-      {isAdmin && <SidebarLink route={ROUTES.codesRequest} handleClick={closeMenu} />}
-
-      {isAdmin && <SidebarLink route={ROUTES.deliveries.requests} handleClick={closeMenu} />}
-
       <SidebarLink route={ROUTES.template} handleClick={closeMenu} />
+
+      <Label label={LABELS.otherTasks} />
+
+      {isAdmin && (
+        <>
+          <SidebarLink route={ROUTES.transactions} handleClick={closeMenu} />
+          <SidebarLink route={ROUTES.checkouts.admin} handleClick={closeMenu} />
+          <SidebarLink route={ROUTES.adminLogs} handleClick={closeMenu} />
+          <SidebarLink route={ROUTES.burn} handleClick={closeMenu} />
+        </>
+      )}
 
       {!isAdmin && <SidebarLink route={ROUTES.adminLogin} handleClick={closeMenu} />}
 

@@ -29,9 +29,9 @@ const LABELS = {
     roles: [ROLES.eventHost],
     title: 'Quick Links',
   },
-  menu: {
-    roles: [ROLES.eventHost],
-    title: 'Menu',
+  manage: {
+    roles: [ROLES.administrator, ROLES.eventHost],
+    title: 'Manage',
   },
 };
 
@@ -79,7 +79,7 @@ const ROUTES = {
   template: {
     path: '/admin/template',
     roles: [ROLES.eventHost],
-    title: 'Manage Templates',
+    title: 'Templates',
   },
   templateForm: {
     path: '/admin/template/form/:id?',
@@ -93,7 +93,7 @@ const ROUTES = {
   events: {
     path: '/admin/events',
     roles: [ROLES.administrator, ROLES.eventHost],
-    title: 'Manage Events',
+    title: 'Events',
   },
   eventsList: {
     path: '/admin/events/list',
@@ -124,7 +124,7 @@ const ROUTES = {
   addressManagement: {
     path: '/admin/address-management',
     roles: [ROLES.administrator],
-    title: 'Manage Addresses',
+    title: 'Addresses',
   },
   transactions: {
     path: '/admin/transactions',
@@ -144,7 +144,7 @@ const ROUTES = {
   codes: {
     path: '/admin/codes',
     roles: [ROLES.administrator, ROLES.eventHost],
-    title: 'Manage Codes',
+    title: 'Codes',
   },
   adminLogs: {
     path: '/admin/logs',
@@ -154,14 +154,14 @@ const ROUTES = {
   codesRequest: {
     path: '/admin/requests',
     roles: [ROLES.administrator],
-    title: 'Manage Codes Requests',
+    title: 'Codes Requests',
   },
 
   deliveries: {
     admin: {
       path: '/admin/deliveries',
       roles: [ROLES.administrator],
-      title: 'Manage Deliveries',
+      title: 'Deliveries',
     },
     newForm: {
       path: '/admin/deliveries/new',
@@ -176,7 +176,7 @@ const ROUTES = {
     requests: {
       path: '/admin/deliveries/requests',
       roles: [ROLES.administrator],
-      title: 'Manage Deliveries Requests',
+      title: 'Deliveries Requests',
     },
   },
 
@@ -184,7 +184,7 @@ const ROUTES = {
     websitesManage: {
       path: '/admin/websites',
       roles: [ROLES.administrator, ROLES.eventHost],
-      title: 'Manage Websites',
+      title: 'Websites',
     },
   },
 };

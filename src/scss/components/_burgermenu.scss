@@ -9,7 +9,8 @@
 
 /* Color/shape of burger icon bars */
 .bm-burger-bars {
-  background: #373a47;
+  background: $violet3;
+  border-radius: 10px;
 }
 
 /* Color/shape of burger icon bars on hover*/
@@ -39,9 +40,8 @@ Note: Beware of modifying this element as it can break the animations - you shou
 
 /* General sidebar styles */
 .bm-menu {
-  background: #373a47;
-  padding: 2.5em 1.5em 0;
-  font-size: 1.15em;
+  background: $violet2;
+  padding-top: 40px;
 }
 
 /* Morph shape necessary with bubble or elastic */
@@ -51,12 +51,15 @@ Note: Beware of modifying this element as it can break the animations - you shou
 
 /* Wrapper for item list */
 .bm-item-list {
-  // color: #b8b7ad;
-  color: $color-base;
-  padding: 0.8em;
-
   h2 {
-    margin-top: 1em;
+    font-family: $font-family-title;
+    margin-left: 23px;
+    margin-bottom: 18px;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 28px;
+    line-height: 40px;
+    letter-spacing: 0.006em;
     color: #fff;
   }
 }
@@ -65,7 +68,13 @@ Note: Beware of modifying this element as it can break the animations - you shou
 a.bm-item {
   display: flex;
   color: #fff;
-  padding: 2px 0 2px 10px;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 34px;
+  margin-left: 60px;
+  margin-bottom: 10px;
+
   &:focus {
     outline: none;
     text-decoration: none;
