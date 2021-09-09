@@ -18,13 +18,11 @@ import ReactModal from 'react-modal';
 /* Components */
 import { SubmitButton } from '../components/SubmitButton';
 import { Loading } from '../components/Loading';
-import FilterButton from '../components/FilterButton';
 
 // constants
 import { ROUTES } from 'lib/constants';
 
 // assets
-import { ReactComponent as EditIcon } from 'images/edit.svg';
 import sortDown from 'images/sort-down.png';
 import sortUp from 'images/sort-up.png';
 import infoButton from 'images/info-button.svg';
@@ -556,9 +554,9 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   disabledDays={
                     values.end_date !== ''
                       ? {
-                        from: new Date(dateFormatterString(values.end_date).getTime() + day),
-                        to: veryFutureDate,
-                      }
+                          from: new Date(dateFormatterString(values.end_date).getTime() + day),
+                          to: veryFutureDate,
+                        }
                       : undefined
                   }
                 />
@@ -573,9 +571,9 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   disabledDays={
                     values.start_date !== ''
                       ? {
-                        from: veryOldDate,
-                        to: new Date(dateFormatterString(values.start_date).getTime()),
-                      }
+                          from: veryOldDate,
+                          to: new Date(dateFormatterString(values.start_date).getTime()),
+                        }
                       : undefined
                   }
                 />
@@ -591,19 +589,19 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   disabledDays={
                     values.end_date !== ''
                       ? [
-                        {
-                          from: veryOldDate,
-                          to: new Date(dateFormatterString(values.end_date).getTime()),
-                        },
-                        {
-                          from: veryOldDate,
-                          to: new Date(),
-                        },
-                        {
-                          from: getMaxAllowExpiryDate(values.end_date),
-                          to: veryFutureDate,
-                        },
-                      ]
+                          {
+                            from: veryOldDate,
+                            to: new Date(dateFormatterString(values.end_date).getTime()),
+                          },
+                          {
+                            from: veryOldDate,
+                            to: new Date(),
+                          },
+                          {
+                            from: getMaxAllowExpiryDate(values.end_date),
+                            to: veryFutureDate,
+                          },
+                        ]
                       : undefined
                   }
                 />
@@ -887,14 +885,14 @@ export const EventList: React.FC = () => {
   const [limit, setLimit] = useState<number>(10);
   const [orderBy, setOrderBy] = useState<SortCondition>({
     sort_by: 'id',
-    sort_direction: SortDirection.descending
+    sort_direction: SortDirection.descending,
   });
 
   let delayedId: NodeJS.Timeout;
 
   const fetchEvents = useCallback(() => {
     const filter: EventFilter = {
-      name: criteria ? criteria : undefined
+      name: criteria ? criteria : undefined,
     };
 
     return getPaginatedEvents(filter, offset, limit, orderBy);
@@ -923,14 +921,14 @@ export const EventList: React.FC = () => {
 
   return (
     <div className={'bk-container'}>
-      <h2>Events</h2>
+      <h2 className="admin-page-title">Events</h2>
       <div className="event-top-bar-container">
         <div className="left_content">
           <input type="text" placeholder="Search by name" onChange={handleNameChange} />
         </div>
         <div className="right_content">
-          <Link to="/admin/events/new">
-            <FilterButton text="Create new POAP" />
+          <Link to="/admin/events/new" className="btn">
+            Create new POAP
           </Link>
         </div>
       </div>
@@ -948,14 +946,15 @@ export const EventList: React.FC = () => {
 
       {hasErrorPaginatedEvents && <div>There was a problem fetching events</div>}
 
-      {paginatedEvent &&
+      {paginatedEvent && (
         <EventTable
           events={paginatedEvent.items}
           total={paginatedEvent.total}
           limit={paginatedEvent.limit}
           onChangePage={(page) => setOffset(page * paginatedEvent.limit)}
           onChangeSort={setOrderBy}
-        />}
+        />
+      )}
     </div>
   );
 };
@@ -964,7 +963,7 @@ const EventTable: React.FC<EventTableProps> = ({ events, total, onChangePage, on
   const [page, setPage] = useState<number>(0);
   const [orderBy, setOrderBy] = useState<SortCondition>({
     sort_by: 'id',
-    sort_direction: SortDirection.descending
+    sort_direction: SortDirection.descending,
   });
 
   useEffect(() => {
@@ -984,75 +983,93 @@ const EventTable: React.FC<EventTableProps> = ({ events, total, onChangePage, on
     let dir;
 
     if (orderBy.sort_by === field && orderBy.sort_direction === SortDirection.ascending) {
-      dir = SortDirection.descending
+      dir = SortDirection.descending;
     } else {
-      dir = SortDirection.ascending
+      dir = SortDirection.ascending;
     }
     const sortCond = {
       sort_by: field,
-      sort_direction: dir
+      sort_direction: dir,
     };
 
     setOrderBy(sortCond);
     onChangeSort(sortCond);
-  }
+  };
 
   return (
     <div>
       <div className={'admin-table transactions'}>
         <div className={'row table-header visible-md'}>
-          <div className={'col-md-1 center pointer'} onClick={() => handleSort('id')}>
-            #{orderBy.sort_by === 'id' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+          <div className={'col-md-2 center pointer'} onClick={() => handleSort('id')}>
+            POAP ID
+            {orderBy.sort_by === 'id' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={`col-md-6 pointer`} onClick={() => handleSort('name')}>
-            Name of the POAP
-            {orderBy.sort_by === 'name' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            POAP Name
+            {orderBy.sort_by === 'name' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={'col-md-2 center'} onClick={() => handleSort('start_date')}>
             Start Date
-            {orderBy.sort_by === 'start_date' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            {orderBy.sort_by === 'start_date' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
-          <div className={'col-md-2 center'}>Image</div>
-          {isAdmin && <div className={'col-md-1 center'}>Edit</div>}
+          <div className={'col-md-1 center'}>Image</div>
+          {isAdmin && <div className={'col-md-1 center'} />}
         </div>
         <div className={'admin-table-row'}>
-          {events && events.map((event, i) => (
-            <div className={`row ${i % 2 === 0 ? 'even' : 'odd'} relative`} key={event.id}>
-              <div className={'col-md-1 center'}>
-                <span className={'visible-sm visible-md'}>#</span>
-                {event.id}
+          {events &&
+            events.map((event, i) => (
+              <div className={`row ${i % 2 === 0 ? 'even' : 'odd'} relative`} key={event.id}>
+                <div className={'col-md-2 center'}>
+                  <span className={'visible-sm visible-md'}>POAP ID: </span>#{event.id}
+                </div>
+                <div className={`col-md-6 ellipsis`}>
+                  <span className={'visible-sm'}>
+                    Name of the POAP: <br />
+                  </span>
+                  <a href={event.event_url} title={event.name} target="_blank" rel="noopener noreferrer">
+                    {event.name}
+                  </a>
+                </div>
+                <div className={'col-md-2 center'}>
+                  <span className={'visible-sm'}>Start date: </span>
+                  <span>{event.start_date.toUpperCase()}</span>
+                </div>
+                <div className={'col-md-1 center '}>
+                  <Tooltip
+                    content={[
+                      <div key={''} className={'event-table-tooltip'}>
+                        <img alt={event.image_url} src={event.image_url} className={'tooltipped'} />
+                      </div>,
+                    ]}
+                  >
+                    <img alt={event.image_url} className={'logo-image'} src={event.image_url} />
+                  </Tooltip>
+                </div>
+                <div className={'col-md-1 center'}>
+                  <Link to={`/admin/events/${event.fancy_id}`}>Edit</Link>
+                </div>
               </div>
-              <div className={`col-md-6 ellipsis`}>
-                <span className={'visible-sm'}>
-                  Name of the POAP: <br />
-                </span>
-                <a href={event.event_url} title={event.name} target="_blank" rel="noopener noreferrer">
-                  {event.name}
-                </a>
-              </div>
-              <div className={'col-md-2 center'}>
-                <span className={'visible-sm'}>Start date: </span>
-                <span>{event.start_date}</span>
-              </div>
-              <div className={'col-md-2 center '}>
-                <Tooltip
-                  content={[
-                    <div key={''} className={'event-table-tooltip'}>
-                      <img alt={event.image_url} src={event.image_url} className={'tooltipped'} />
-                    </div>,
-                  ]}
-                >
-                  <img alt={event.image_url} className={'logo-image'} src={event.image_url} />
-                </Tooltip>
-              </div>
-              <div className={'col-md-1 center event-edit-icon-container'}>
-                <Link to={`/admin/events/${event.fancy_id}`}>
-                  <EditIcon />
-                </Link>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
+        <div className="admin-table-footer" />
         <div className={'pagination'}>
           {total && total > limit && (
             <ReactPaginate

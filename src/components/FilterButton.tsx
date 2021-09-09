@@ -7,7 +7,7 @@ type FilterButtonProps = {
 };
 
 const FilterButton: React.FC<FilterButtonProps> = ({ text, handleClick, type = 'button' }) => (
-  <button type={type} className="filter-base filter-button" onClick={handleClick}>
+  <button type={type} className="btn" onClick={handleClick}>
     {text}
   </button>
 );

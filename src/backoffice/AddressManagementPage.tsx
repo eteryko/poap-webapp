@@ -76,14 +76,15 @@ const AddressManagementPage: FC = () => {
 
   return (
     <div className={'admin-table addresses'}>
-      <h2>Admin addresses management</h2>
+      <h2 className="admin-page-title">Admin addresses management</h2>
       <div className={'row table-header visible-md'}>
         <div className={'col-md-1 center'}>#</div>
-        <div className={'col-md-3'}>Address</div>
+        <div className={'col-md-2'}>Address</div>
         <div className={'col-md-2'}>Role</div>
         <div className={'col-md-2'}>Pending Txs</div>
         <div className={'col-md-2 center'}>Balance (ETH)</div>
         <div className={'col-md-2 center'}>Gas Price (GWei)</div>
+        <div className="col-md-1" />
       </div>
       <div className={'admin-table-row'}>
         {isFetchingAddresses && <Loading />}
@@ -95,7 +96,7 @@ const AddressManagementPage: FC = () => {
                   <span className={'visible-sm'}>#</span>
                   {address.id}
                 </div>
-                <div className={'col-md-3'}>
+                <div className={'col-md-2'}>
                   <span className={'visible-sm'}>Address: </span>
                   <a href={etherscanLinks.address(address.signer)} target={'_blank'}>
                     {reduceAddress(address.signer)}
@@ -116,12 +117,17 @@ const AddressManagementPage: FC = () => {
                 <div className={'col-md-2 center'}>
                   <span className={'visible-sm'}>Gas Price (GWei): </span>
                   {convertToGWEI(address.gas_price)}
-                  <img src={edit} alt={'Edit'} className={'edit-icon'} onClick={() => openEditModal(address)} />
+                </div>
+                <div className="col-md-1">
+                  <button type="button" className="table-action" onClick={() => openEditModal(address)}>
+                    Edit
+                  </button>
                 </div>
               </div>
             );
           })}
       </div>
+      <div className="admin-table-footer" />
       <ReactModal isOpen={modalOpen} shouldFocusAfterRender={true}>
         <div>
           <h3>Edit Gas Price</h3>

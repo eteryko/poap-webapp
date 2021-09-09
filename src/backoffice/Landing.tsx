@@ -1,5 +1,5 @@
 import React from 'react';
-import { authClient } from '../auth';
+// import { authClient } from '../auth';
 
 import CalendarIcon from '../images/backoffice-calendar-icon.svg';
 import CodeIcon from '../images/backoffice-code-icon.svg';
@@ -9,7 +9,8 @@ import { ROUTES } from '../lib/constants';
 import Card from './Card';
 
 const Landing: React.FC = () => {
-  const isAdmin = authClient.isAuthenticated();
+  //todo handle is admin
+  // const isAdmin = authClient.isAuthenticated();
 
   const cards = [
     {

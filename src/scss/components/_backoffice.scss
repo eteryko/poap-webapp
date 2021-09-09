@@ -442,12 +442,31 @@
   color: $color-secondary;
 }
 
+.admin-page-title {
+  font-family: $font-family-title;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 48px;
+  line-height: 44px;
+  letter-spacing: 0.006em;
+  color: $violet2;
+  margin-bottom: 50px;
+}
+
 .admin-table {
+  margin-bottom: 20px;
+
   .row {
     padding: 10px 5px;
 
     &.table-header {
-      font-weight: bold;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 14px;
+      line-height: 21px;
+      color: $grayscale4;
+      background-color: $grayscale1;
+      border-radius: 20px 20px 0 0;
 
       .toggle-icon {
         cursor: pointer;
@@ -468,9 +487,19 @@
   }
 
   .admin-table-row {
-    border-top: 1px solid #d2d2d2;
-    border-right: 1px solid #d2d2d2;
-    border-left: 1px solid #d2d2d2;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+    color: $grayscale5;
+
+    border-top: 1px solid $grayscale2;
+    border-right: 1px solid $grayscale2;
+    border-left: 1px solid $grayscale2;
+
+    a {
+      color: $violet2;
+    }
 
     .capitalize {
       text-transform: capitalize;
@@ -491,7 +520,7 @@
     }
 
     .row {
-      border-bottom: 1px solid #d2d2d2;
+      border-bottom: 1px solid $grayscale1;
 
       @media (max-width: $bp-sw) {
         position: relative;
@@ -586,6 +615,20 @@
       padding: 2px 5px;
       width: 20px;
     }
+
+    .table-action {
+      background: none;
+      color: $violet2;
+      border: none;
+      cursor: pointer;
+    }
+  }
+
+  .admin-table-footer {
+    background-color: $grayscale1;
+    width: 100%;
+    height: 20px;
+    border-radius: 0 0 20px 20px;
   }
 
   .filters-container {
@@ -817,11 +860,13 @@
         border-radius: 30px;
 
         a {
+          color: $grayscale4;
           cursor: pointer;
         }
 
         &.active {
-          background: white;
+          background: $grayscale1;
+          border-radius: 8px;
         }
       }
     }
@@ -1064,6 +1109,7 @@
 }
 
 .secondary-filters {
+  color: $grayscale4;
   margin-bottom: 25px;
 
   @media (min-width: $bp-mw) {
