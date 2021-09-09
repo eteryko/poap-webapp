@@ -294,6 +294,14 @@
   margin-top: auto;
   border-top: 1px solid #eaedf4;
 
+  @media (max-width: $bp-m) {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    padding-top: 10px;
+  }
+
   .backoffice-footer-title {
     font-family: $font-family-title;
     font-style: normal;
@@ -303,11 +311,19 @@
     color: $violet2;
     width: 100%;
     margin-bottom: 10px;
+
+    @media (max-width: $bp-m) {
+      text-align: center;
+    }
   }
 
   .backoffice-footer-logo {
     width: 48px;
     height: fit-content;
+
+    @media (max-width: $bp-m) {
+      margin-bottom: 10px;
+    }
   }
 
   .backoffice-footer-ecosystem {
@@ -330,6 +346,10 @@
         color: $grayscale4;
       }
     }
+
+    @media (max-width: $bp-m) {
+      margin-bottom: 10px;
+    }
   }
 
   .backoffice-footer-communities {
@@ -337,8 +357,63 @@
     flex-direction: column;
     align-items: end;
 
-    .backoffice-footer-communities-title {
+    @media (max-width: $bp-m) {
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
+    .backoffice-footer-title {
+      text-align: right;
+    }
+
+    .backoffice-footer-communities-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+
+      a {
+        font-size: 0;
+        margin-right: 8px;
+
+        &:hover {
+          background-color: $violet4;
+        }
+
+        width: 24px;
+        aspect-ratio: 1;
+        background-color: $grayscale3;
+        background-size: contain;
+        transition: background-color 0.3s ease-in-out;
+
+        &.twitter {
+          mask: url("../images/twitter.svg");
+          mask-size: 24px;
+        }
+
+        &.telegram {
+          mask: url("../images/telegram.svg");
+          mask-size: 24px;
+        }
+
+        &.reddit {
+          mask: url("../images/reddit.svg");
+          mask-size: 24px;
+        }
+
+        &.github {
+          mask: url("../images/github.svg");
+          mask-size: 24px;
+        }
+
+        &.discord {
+          mask: url("../images/discord.svg");
+          mask-size: 24px;
+        }
+      }
+
+      a:last-child {
+        margin-right: 0;
+      }
     }
   }
 }

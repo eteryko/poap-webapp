@@ -41,6 +41,23 @@ const BackofficeFooter: React.FC = () => {
       </div>
       <div className="backoffice-footer-communities">
         <div className="backoffice-footer-title">Join our community!</div>
+        <div className="backoffice-footer-communities-container">
+          <a href="https://twitter.com/poapxyz/" target="_blank" rel="noopener noreferrer" className="twitter">
+            twitter
+          </a>
+          <a href="https://github.com/poap-xyz" target="_blank" rel="noopener noreferrer" className="github">
+            github
+          </a>
+          <a href="https://t.me/poapxyz" target="_blank" rel="noopener noreferrer" className="telegram">
+            telegram
+          </a>
+          <a href="https://discord.gg/fcxW4yR" target="_blank" rel="noopener noreferrer" className="discord">
+            discord
+          </a>
+          <a href="https://reddit.com/r/poap" target="_blank" rel="noopener noreferrer" className="reddit">
+            reddit
+          </a>
+        </div>
       </div>
     </div>
   );
