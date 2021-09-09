@@ -12,7 +12,6 @@ import ReactPaginate from 'react-paginate';
 import ReactModal from 'react-modal';
 
 /* Assets */
-import { ReactComponent as EditIcon } from '../../images/edit.svg';
 import checked from '../../images/checked.svg';
 import error from '../../images/error.svg';
 import { format, parse } from 'date-fns';
@@ -170,7 +169,7 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
         />
       </ReactModal>
       {/*End Modals*/}
-      <h2>Websites</h2>
+      <h2 className="admin-table-title">Websites</h2>
       <div className="filters-container websites">
         <div className={'filter col-md-4 col-xs-12'}>
           <div className={'filter-group'}>
@@ -265,29 +264,33 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
                     />
                   </div>
 
-                  <div className={'col-md-1 col-xs-1 center event-edit-icon-container'}>
-                    <EditIcon
+                  <div className={'col-md-1 col-xs-1 center'}>
+                    <button
+                      type="button"
                       onClick={async () => {
                         await handleEditOnClick(website.claim_name);
                       }}
-                      style={{ cursor: 'pointer' }}
-                    />
+                      className="admin-table-action"
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
+          <div className="admin-table-footer" />
           {total > limit && (
-              <div className={'pagination'}>
-                <ReactPaginate
-                  pageCount={Math.ceil(total / limit)}
-                  marginPagesDisplayed={2}
-                  pageRangeDisplayed={5}
-                  activeClassName={'active'}
-                  onPageChange={handlePageChange}
-                  forcePage={page}
-                />
-              </div>
+            <div className={'pagination'}>
+              <ReactPaginate
+                pageCount={Math.ceil(total / limit)}
+                marginPagesDisplayed={2}
+                pageRangeDisplayed={5}
+                activeClassName={'active'}
+                onPageChange={handlePageChange}
+                forcePage={page}
+              />
+            </div>
           )}
         </div>
       )}

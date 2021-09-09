@@ -362,7 +362,7 @@ select {
 
   &:hover,
   &:focus {
-    border: 2px solid $color-primary;
+    border: 1px solid $grayscale4;
   }
 
   &:disabled {

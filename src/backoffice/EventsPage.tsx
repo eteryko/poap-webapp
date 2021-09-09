@@ -921,7 +921,7 @@ export const EventList: React.FC = () => {
 
   return (
     <div className={'bk-container'}>
-      <h2 className="admin-page-title">Events</h2>
+      <h2 className="admin-table-title">Events</h2>
       <div className="event-top-bar-container">
         <div className="left_content">
           <input type="text" placeholder="Search by name" onChange={handleNameChange} />

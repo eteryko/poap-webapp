@@ -260,7 +260,7 @@ const QrPage: FC = () => {
 
   return (
     <div className={'admin-table qr'}>
-      <h2>Manage Codes</h2>
+      <h2 className="admin-table-title">Manage Codes</h2>
       <div className={'filters-container qr'}>
         <div className={'filter col-md-4'}>
           <div className="filter-option">
@@ -476,6 +476,7 @@ const QrPage: FC = () => {
               );
             })}
           </div>
+          <div className="admin-table-footer" />
           {total > limit && (
             <div className={'pagination'}>
               <ReactPaginate

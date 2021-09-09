@@ -15,9 +15,6 @@ import { convertToGWEI, convertFromGWEI, convertToETH, reduceAddress } from '../
 import { SubmitButton } from '../components/SubmitButton';
 import { Loading } from '../components/Loading';
 
-/* Assets */
-import edit from '../images/edit.svg';
-
 type GasPriceFormValues = {
   gasPrice: string;
 };
@@ -76,7 +73,7 @@ const AddressManagementPage: FC = () => {
 
   return (
     <div className={'admin-table addresses'}>
-      <h2 className="admin-page-title">Admin addresses management</h2>
+      <h2 className="admin-table-title">Admin addresses management</h2>
       <div className={'row table-header visible-md'}>
         <div className={'col-md-1 center'}>#</div>
         <div className={'col-md-2'}>Address</div>
@@ -119,7 +116,7 @@ const AddressManagementPage: FC = () => {
                   {convertToGWEI(address.gas_price)}
                 </div>
                 <div className="col-md-1">
-                  <button type="button" className="table-action" onClick={() => openEditModal(address)}>
+                  <button type="button" className="admin-table-action" onClick={() => openEditModal(address)}>
                     Edit
                   </button>
                 </div>

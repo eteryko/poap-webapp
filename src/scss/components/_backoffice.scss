@@ -442,7 +442,7 @@
   color: $color-secondary;
 }
 
-.admin-page-title {
+.admin-table-title {
   font-family: $font-family-title;
   font-style: normal;
   font-weight: bold;
@@ -616,7 +616,7 @@
       width: 20px;
     }
 
-    .table-action {
+    .admin-table-action {
       background: none;
       color: $violet2;
       border: none;
@@ -982,21 +982,17 @@
 }
 
 .filter-base {
-  height: 50px;
   min-width: 130px;
-  border: 2px solid $color-light-grey;
+  border: 1px solid $grayscale3;
   border-radius: 4px;
   line-height: 14px;
   cursor: pointer;
   outline: unset;
-
-  &:active {
-    outline: solid;
-  }
+  height: 44px;
 }
 
 .filter-select {
-  color: $color-primary;
+  color: $grayscale6;
   padding-left: 20px;
   background-color: white;
   margin-right: 8px;
