@@ -43,7 +43,7 @@ export const colourStyles = {
     borderRadius: 4,
     borderWidth: 1,
     borderColor: '#C4CAE8',
-    '&:hover': { borderColor: '#6534ff' },
+    '&:hover': { borderColor: '#8492CE' },
   }),
   input: (styles: any) => ({ ...styles, height: 36 }),
   placeholder: (styles: any) => ({ ...styles, color: '#4D5680' }),

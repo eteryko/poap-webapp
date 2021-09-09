@@ -1127,10 +1127,14 @@
 
   &--links {
     button {
-      line-height: 30px;
       border: 0;
-      color: $color-primary;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 16px;
+      line-height: 21px;
+      color: $violet2;
       cursor: pointer;
+      background: none;
     }
   }
 }
