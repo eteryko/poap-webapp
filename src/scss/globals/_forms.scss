@@ -71,25 +71,24 @@ div {
 
     input {
       width: 100%;
-      color: $color-primary;
-      outline-color: $color-primary;
+      color: $grayscale5;
       padding: 12px;
       box-shadow: none;
-      background: $color-invert;
-      transition: right 0.2s ease-out;
-      border-radius: 4px;
+      border-radius: 6px;
       margin: 0 auto 16px;
       font-size: 1rem;
-      height: 50px;
+      transition: right 0.2s ease-out;
+      border: 1px solid $grayscale3;
+      height: 40px;
 
       &::placeholder {
-        color: $color-primary;
+        color: $grayscale3;
         opacity: 1;
       }
 
       &:focus,
       &:hover {
-        border: 2px solid $color-primary;
+        border: 1px solid $grayscale5;
       }
     }
 
@@ -169,7 +168,7 @@ input[type='file'] {
   transition: all 0.3s ease-out;
   border-radius: 4px;
   margin: 0 auto 16px;
-  color: $color-primary;
+  color: $grayscale5;
 
   outline-color: $color-primary;
 
