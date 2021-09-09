@@ -151,7 +151,7 @@ const TransactionsPage: FC = () => {
 
   return (
     <div className={'admin-table transactions'}>
-      <h2>Transactions</h2>
+      <h2 className="admin-table-title">Transactions</h2>
       <div>
         <div className={'filters-container transactions'}>
           <div className={'left-content'}>
@@ -240,6 +240,7 @@ const TransactionsPage: FC = () => {
           <div className={'no-results'}>No transactions found</div>
         )}
       </div>
+      <div className="admin-table-footer" />
       {total > 10 && (
         <div className={'pagination'}>
           <ReactPaginate

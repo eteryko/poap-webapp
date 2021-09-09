@@ -9,9 +9,6 @@ import { Loading } from 'components/Loading';
 // types
 import { Template, TemplatesResponse } from 'api';
 
-// assets
-import { ReactComponent as EditIcon } from 'images/edit.svg';
-
 type Props = {
   isFetchingTemplates: boolean;
   templates: TemplatesResponse<Template> | null;
@@ -72,15 +69,16 @@ export const TemplatesTable: FC<Props> = ({
                     </Tooltip>
                   </div>
 
-                  <div className={'col-md-2 col-xs-4 center template-edit-icon-container'}>
-                    <Link to={`/admin/template/form/${template.id}`}>
-                      <EditIcon />
+                  <div className={'col-md-2 col-xs-4 center'}>
+                    <Link to={`/admin/template/form/${template.id}`} className="admin-table-action">
+                      Edit
                     </Link>
                   </div>
                 </div>
               );
             })}
           </div>
+          <div className="admin-table-footer" />
           {total > limit * page && (
             <div className={'pagination'}>
               <ReactPaginate

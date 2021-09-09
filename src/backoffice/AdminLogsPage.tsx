@@ -128,7 +128,7 @@ const AdminLogsPage: FC = () => {
 
   return (
     <div className="admin-table admin-logs">
-      <h2>{ROUTES.adminLogs.title}</h2>
+      <h2 className="admin-table-title">{ROUTES.adminLogs.title}</h2>
       <div>
         <div className={'filters-container admin-logs'}>
           <div className={'filter col-md-4'}>
@@ -226,6 +226,7 @@ const AdminLogsPage: FC = () => {
 
         {logs && logs.length === 0 && !isFetchingLogs && <div className={'no-results'}>No logs found</div>}
       </div>
+      <div className="admin-table-footer" />
       {total > limit && (
         <div className={'pagination'}>
           <ReactPaginate

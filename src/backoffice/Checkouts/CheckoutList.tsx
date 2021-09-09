@@ -105,7 +105,7 @@ const CheckoutList = () => {
 
   return (
     <div className={'admin-table checkouts'}>
-      <h2>Checkouts</h2>
+      <h2 className="admin-table-title">Checkouts</h2>
       <div className="filters-container checkouts">
         <div className={'filter col-md-4 col-xs-12'}>
           <div className="filter-option">
@@ -205,6 +205,7 @@ const CheckoutList = () => {
               );
             })}
           </div>
+          <div className="admin-table-footer" />
           {total > limit && (
             <div className={'pagination'}>
               <ReactPaginate

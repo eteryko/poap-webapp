@@ -13,7 +13,6 @@ import FilterButton from '../../components/FilterButton';
 import ReactPaginate from 'react-paginate';
 
 /* Assets */
-import { ReactComponent as EditIcon } from '../../images/edit.svg';
 import checked from '../../images/checked.svg';
 import error from '../../images/error.svg';
 import EventSelect, { colourStyles } from 'components/EventSelect';
@@ -109,7 +108,7 @@ const DeliveriesList = () => {
 
   return (
     <div className={'admin-table deliveries'}>
-      <h2>Deliveries</h2>
+      <h2 className="admin-table-title">Deliveries</h2>
       <div className="filters-container deliveries">
         <div className={'filter col-md-4 col-xs-12'}>
           <div className="filter-option">
@@ -153,7 +152,11 @@ const DeliveriesList = () => {
           <div className={'admin-table-row delivery-table'}>
             {deliveries.map((delivery, i) => {
               return (
-                <div className={`row ${i % 2 === 0 ? 'even' : 'odd'}`} key={delivery.id} style={{position: 'relative'}}>
+                <div
+                  className={`row ${i % 2 === 0 ? 'even' : 'odd'}`}
+                  key={delivery.id}
+                  style={{ position: 'relative' }}
+                >
                   <div className={'col-md-3 col-xs-12 ellipsis'}>
                     <span className={'visible-sm'}>Name: </span>
                     {delivery.card_title}
@@ -166,7 +169,11 @@ const DeliveriesList = () => {
                         try {
                           let _id = parseInt(id, 10);
                           let event = events.find((e) => e.id === _id);
-                          if (event) return event.name.substr(0, 20) + ` (${_id})${i !== delivery.event_ids.split(',').length-1 ? '; ' : ''}`;
+                          if (event)
+                            return (
+                              event.name.substr(0, 20) +
+                              ` (${_id})${i !== delivery.event_ids.split(',').length - 1 ? '; ' : ''}`
+                            );
                         } catch (e) {
                           console.log(e);
                         }
@@ -187,20 +194,21 @@ const DeliveriesList = () => {
                     <img
                       src={delivery.active ? checked : error}
                       alt={delivery.active ? 'Active' : 'Inactive'}
-                      style={{marginLeft: 10}}
+                      style={{ marginLeft: 10 }}
                       className={'status-icon'}
                     />
                   </div>
-                  <div className={'col-md-1 col-xs-1 center event-edit-icon-container'}>
-                    <Link to={`/admin/deliveries/${delivery.id}`}>
-                      <EditIcon />
+                  <div className={'col-md-1 col-xs-1 center'}>
+                    <Link className="admin-table-action" to={`/admin/deliveries/${delivery.id}`}>
+                      Edit
                     </Link>
                   </div>
-
                 </div>
               );
             })}
           </div>
+          <div className="admin-table-footer" />
+
           {total > limit && (
             <div className={'pagination'}>
               <ReactPaginate

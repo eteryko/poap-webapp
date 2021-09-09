@@ -43,7 +43,7 @@ export const TemplatePage = () => {
   return (
     <div className="container">
       <div className={'admin-table templates'}>
-        <h2>Templates</h2>
+        <h2 className="admin-table-title">Templates</h2>
         <TemplatesFilters setLimit={setLimit} setName={setName} />
         <TemplatesTable
           isFetchingTemplates={fetchingTemplates}
