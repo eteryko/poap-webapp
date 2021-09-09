@@ -355,7 +355,7 @@
   .backoffice-footer-communities {
     display: flex;
     flex-direction: column;
-    align-items: end;
+    align-items: flex-end;
 
     @media (max-width: $bp-m) {
       align-items: center;
@@ -386,26 +386,31 @@
         transition: background-color 0.3s ease-in-out;
 
         &.twitter {
+          //noinspection CssUnknownTarget
           mask: url("../images/twitter.svg");
           mask-size: 24px;
         }
 
         &.telegram {
+          //noinspection CssUnknownTarget
           mask: url("../images/telegram.svg");
           mask-size: 24px;
         }
 
         &.reddit {
+          //noinspection CssUnknownTarget
           mask: url("../images/reddit.svg");
           mask-size: 24px;
         }
 
         &.github {
+          //noinspection CssUnknownTarget
           mask: url("../images/github.svg");
           mask-size: 24px;
         }
 
         &.discord {
+          //noinspection CssUnknownTarget
           mask: url("../images/discord.svg");
           mask-size: 24px;
         }
