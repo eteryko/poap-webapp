@@ -1,6 +1,8 @@
 .app-content {
   &.backoffice {
-    padding-top: 100px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 
     .event-table-tooltip {
       text-align: center;
@@ -9,6 +11,10 @@
       img.tooltipped {
         width: 250px;
       }
+    }
+
+    .container {
+      padding-top: 55px;
     }
   }
 }
@@ -289,6 +295,7 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  position: relative;
   height: 253px;
   padding: 49px 59px 0 59px;
   margin-top: auto;

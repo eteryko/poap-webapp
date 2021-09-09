@@ -8,7 +8,7 @@ type ScanHeaderProps = {
 
 const Header: React.FC<ScanHeaderProps> = ({ sectionName }) => (
   <header id="site-header" role="banner">
-    <div className="container">
+    <div className="header-container">
       <div className="pull-left">
         <Link to="/" className="logo">
           <img src={PoapLogo} alt="POAP" />

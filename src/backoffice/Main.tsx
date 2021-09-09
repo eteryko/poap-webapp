@@ -146,9 +146,9 @@ const AdminLogsPageWithAuthentication = withAuthentication(AdminLogsPage);
 export const BackOffice: React.FC = () => (
   <>
     <NavigationMenu />
-    <Header sectionName={'Backoffice'} />
-    <img src={Cover} alt="cover" className="backoffice-cover" />
     <main className="app-content backoffice">
+      <Header sectionName={'Backoffice'} />
+      <img src={Cover} alt="cover" className="backoffice-cover" />
       <div className="container">
         <Switch>
           <Route exact path={ROUTES.codes.path} render={() => <QrPage />} />
