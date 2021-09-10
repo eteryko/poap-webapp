@@ -15,14 +15,7 @@ import { Column, SortingRule, TableInstance, useExpanded, useSortBy, useTable } 
 import { Link } from 'react-router-dom';
 
 /* Helpers */
-import {
-  getQrRequests,
-  PoapEvent,
-  QrRequest,
-  setQrRequests,
-  SortCondition,
-  SortDirection,
-} from '../api';
+import { getQrRequests, PoapEvent, QrRequest, setQrRequests, SortCondition, SortDirection } from '../api';
 import { format } from 'date-fns';
 import { timeSince } from '../lib/helpers';
 import { useWindowWidth } from '@react-hook/window-size/throttled';
@@ -143,7 +136,7 @@ const QrRequests: FC = () => {
     return {
       value: event.id,
       label: label,
-      start_date: event.start_date
+      start_date: event.start_date,
     };
   };
 
@@ -183,59 +176,57 @@ const QrRequests: FC = () => {
 
   return (
     <div className={'admin-table qr'}>
-      <h2>Manage Codes Requests</h2>
-      <div className={'filters-container qr'}>
-        <div className={'filter col-md-4'}>
-          <div className="filter-option">
-            <EventSelect
-              name={'event'}
-              styles={colourStyles}
-              toEventOption={toEventOption}
-              onChange={handleSelectChange}
-              placeholder={'Filter by Event'} />
-          </div>
-        </div>
-        <div className={'filter col-md-3 col-xs-6'}>
-          <div className={'filter-group'}>
-            <FilterSelect handleChange={handleStatusChange}>
-              <option value="">Filter by reviewed</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="false">Not Reviewed</option>
-            </FilterSelect>
-          </div>
-        </div>
-        <div className={'filter col-xs-6 col-md-3'}>
-          <FilterSelect handleChange={handleTypeChange}>
+      <h2 className="admin-table-title">Manage Codes Requests</h2>
+
+      <div className="filter-row">
+        <div className="filter-row-left-content">
+          <EventSelect
+            name={'event'}
+            styles={colourStyles}
+            toEventOption={toEventOption}
+            onChange={handleSelectChange}
+            placeholder={'Filter by Event'}
+            className="filter-row-content"
+          />
+          <FilterSelect handleChange={handleStatusChange} className="filter-row-content">
+            <option value="">Filter by reviewed</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="false">Not Reviewed</option>
+          </FilterSelect>
+          <FilterSelect handleChange={handleTypeChange} className="filter-row-content">
             <option value="">Filter by type</option>
             <option value="website">Website Requests</option>
             <option value="qr">QR Requests</option>
           </FilterSelect>
         </div>
-        <ReactModal
-          isOpen={isCreationModalOpen}
-          onRequestClose={handleCreationModalRequestClose}
-          shouldFocusAfterRender={true}
-          shouldCloseOnEsc={true}
-          shouldCloseOnOverlayClick={true}
-          style={{ content: { overflow: 'visible' } }}
-        >
-          <CreationModal
-            qrRequest={selectedQrRequest}
-            handleModalClose={handleCreationModalRequestClose}
-            fetchQrRequests={fetchQrRequests}
-          />
-        </ReactModal>
       </div>
-      <div className={'secondary-filters'}>
-        <div className={'secondary-filters--pagination'}>
-          Results per page:
-          <select onChange={handleLimitChange}>
-            <option value={10}>10</option>
-            <option value={100}>100</option>
-            <option value={1000}>1000</option>
-          </select>
+      <div className="filter-row">
+        <div className="filter-row-left-content">
+          <div className={'filter-row-content filter-row-pagination'}>
+            <span>Results per page</span>
+            <select className="filter-base filter-select" onChange={handleLimitChange}>
+              <option value={10}>10</option>
+              <option value={100}>100</option>
+              <option value={1000}>1000</option>
+            </select>
+          </div>
         </div>
       </div>
+
+      <ReactModal
+        isOpen={isCreationModalOpen}
+        onRequestClose={handleCreationModalRequestClose}
+        shouldFocusAfterRender={true}
+        shouldCloseOnEsc={true}
+        shouldCloseOnOverlayClick={true}
+        style={{ content: { overflow: 'visible' } }}
+      >
+        <CreationModal
+          qrRequest={selectedQrRequest}
+          handleModalClose={handleCreationModalRequestClose}
+          fetchQrRequests={fetchQrRequests}
+        />
+      </ReactModal>
 
       {width > 990 ? (
         <QrRequestTable
@@ -487,53 +478,56 @@ const QrRequestTable: React.FC<QrRequestTableProps> = ({ data, onEdit, onSortCha
   }, [sortBy]);
 
   return (
-    <table className={'backoffice-table fluid'} {...getTableProps()}>
-      <thead>
-        {headerGroups.map((headerGroup, i) => (
-          <tr key={i} {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column, j) => (
-              <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])}>
-                {column.render('Header')}
-                {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody {...getTableBodyProps()}>
-        {!loading &&
-          rows.map((row, i) => {
-            prepareRow(row);
-            return (
-              <React.Fragment key={i + 'fragment'}>
-                <tr key={i + 'row'} {...row.getRowProps()}>
-                  {row.cells.map((cell, j) => {
-                    return (
-                      <td key={j} {...cell.getCellProps()}>
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-                {row.isExpanded ? (
-                  <tr key={i + 'expanded'}>
-                    <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
-                      <EventSubComponent event={row.original.event} reviewed_by={row.original.reviewed_by} />
-                    </td>
+    <>
+      <table className={'backoffice-table fluid'} {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup, i) => (
+            <tr key={i} {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column, j) => (
+                <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])}>
+                  {column.render('Header')}
+                  {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {!loading &&
+            rows.map((row, i) => {
+              prepareRow(row);
+              return (
+                <React.Fragment key={i + 'fragment'}>
+                  <tr key={i + 'row'} {...row.getRowProps()}>
+                    {row.cells.map((cell, j) => {
+                      return (
+                        <td key={j} {...cell.getCellProps()}>
+                          {cell.render('Cell')}
+                        </td>
+                      );
+                    })}
                   </tr>
-                ) : null}
-              </React.Fragment>
-            );
-          })}
-        {loading && (
-          <tr>
-            <td className={'loading'} colSpan={10}>
-              <Loading />
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+                  {row.isExpanded ? (
+                    <tr key={i + 'expanded'}>
+                      <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
+                        <EventSubComponent event={row.original.event} reviewed_by={row.original.reviewed_by} />
+                      </td>
+                    </tr>
+                  ) : null}
+                </React.Fragment>
+              );
+            })}
+          {loading && (
+            <tr>
+              <td className={'loading'} colSpan={10}>
+                <Loading />
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <div className="admin-table-footer" />
+    </>
   );
 };
 

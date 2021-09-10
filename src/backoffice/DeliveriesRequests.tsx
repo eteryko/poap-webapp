@@ -15,18 +15,20 @@ import { Column, SortingRule, useExpanded, useSortBy, useTable } from 'react-tab
 /* Helpers */
 import {
   Delivery,
-  getDeliveries, getEventById,
-  PoapEvent, PoapFullEvent, rebuildDeliveries,
+  getDeliveries,
+  getEventById,
+  PoapEvent,
+  PoapFullEvent,
+  rebuildDeliveries,
   SortCondition,
-  SortDirection, updateDeliveryStatus,
+  SortDirection,
+  updateDeliveryStatus,
 } from '../api';
 import { format } from 'date-fns';
 import { timeSince } from '../lib/helpers';
 import { useWindowWidth } from '@react-hook/window-size/throttled';
 
 /* Assets */
-import edit from 'images/edit.svg';
-import editDisable from 'images/edit-disable.svg';
 import checked from '../images/checked.svg';
 import error from '../images/error.svg';
 import pending from '../images/pending.svg';
@@ -46,7 +48,7 @@ type CreationModalProps = {
 };
 
 type CreationModalFormikValues = {
-  approved: string
+  approved: string;
 };
 
 const DeliveriesRequests: FC = () => {
@@ -138,23 +140,25 @@ const DeliveriesRequests: FC = () => {
 
   const { addToast } = useToasts();
   const rebuildDeliveriesPage = async () => {
-    setIsRebuilding(true)
+    setIsRebuilding(true);
 
-    await rebuildDeliveries().then((_) => {
-      addToast(`poap.delivery rebuilt succesfully`, {
-        appearance: 'success',
-        autoDismiss: true,
+    await rebuildDeliveries()
+      .then((_) => {
+        addToast(`poap.delivery rebuilt succesfully`, {
+          appearance: 'success',
+          autoDismiss: true,
+        });
+      })
+      .catch((e) => {
+        console.log(e);
+        addToast('poap.delivery failed to rebuild. \n' + e.message, {
+          appearance: 'error',
+          autoDismiss: false,
+        });
       });
-    }).catch((e) => {
-      console.log(e);
-      addToast('poap.delivery failed to rebuild. \n' + e.message, {
-        appearance: 'error',
-        autoDismiss: false,
-      });
-    });
 
-    setIsRebuilding(false)
-  }
+    setIsRebuilding(false);
+  };
 
   const getTableData = (): DeliveryTableData[] => {
     return _deliveries.map((delivery) => {
@@ -162,7 +166,10 @@ const DeliveriesRequests: FC = () => {
         id: delivery.id,
         card_title: delivery.card_title,
         event_ids: delivery.event_ids.split(',').map((e) => parseInt(e, 10)),
-        reviewed_date: delivery.approved && delivery.reviewed_date ? formatDate(new Date(delivery.reviewed_date).toDateString()) : '-',
+        reviewed_date:
+          delivery.approved && delivery.reviewed_date
+            ? formatDate(new Date(delivery.reviewed_date).toDateString())
+            : '-',
         reviewed_by: delivery.approved ? delivery.reviewed_by : '-',
         approved: delivery.approved !== undefined ? delivery.approved : null,
       };
@@ -171,49 +178,51 @@ const DeliveriesRequests: FC = () => {
 
   return (
     <div className={'admin-table qr'}>
-      <div style={{display: 'flex'}}>
-        <h2>Manage Deliveries Requests</h2>
-        <SubmitButton className='small' style={{margin: '0 0 2rem auto', minWidth: 100}} canSubmit={!isRebuilding} isSubmitting={isRebuilding} text={'Rebuild'} onClick={() => {
-          rebuildDeliveriesPage()
-        }} />
-      </div>
-      <div className={'filters-container qr'}>
-        <div className={'filter col-md-3 col-xs-6'}>
-          <div className={'filter-group'}>
-            <FilterSelect handleChange={handleStatusChange}>
-              <option value="">Filter by Approval</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </FilterSelect>
+      <h2 className="admin-table-title">Manage Deliveries Requests</h2>
+
+      <div className="filter-row">
+        <div className="filter-row-left-content">
+          <FilterSelect className="filter-row-content" handleChange={handleStatusChange}>
+            <option value="">Filter by Approval</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </FilterSelect>
+          <div className={'filter-row-content filter-row-pagination'}>
+            <span>Results per page</span>
+            <select className="filter-select filter-base" onChange={handleLimitChange}>
+              <option value={10}>10</option>
+              <option value={100}>100</option>
+              <option value={1000}>1000</option>
+            </select>
           </div>
         </div>
-        <ReactModal
-          isOpen={isCreationModalOpen}
-          onRequestClose={handleCreationModalRequestClose}
-          shouldFocusAfterRender={true}
-          shouldCloseOnEsc={true}
-          shouldCloseOnOverlayClick={true}
-          style={{ content: { overflow: 'visible' } }}
-        >
-          <CreationModal
-            deliveryId={selectedDeliveryId}
-            handleModalClose={handleCreationModalRequestClose}
-            fetchDeliveries={fetchDeliveries}
-            rebuildDeliveriesPage={rebuildDeliveriesPage}
+        <div className="filter-row-right-content">
+          <SubmitButton
+            canSubmit={!isRebuilding}
+            isSubmitting={isRebuilding}
+            text={'Rebuild'}
+            onClick={() => {
+              rebuildDeliveriesPage();
+            }}
           />
-        </ReactModal>
-      </div>
-      <div className={'secondary-filters'}>
-        <div className={'secondary-filters--pagination'}>
-          Results per page:
-          <select onChange={handleLimitChange}>
-            <option value={10}>10</option>
-            <option value={100}>100</option>
-            <option value={1000}>1000</option>
-          </select>
         </div>
       </div>
+      <ReactModal
+        isOpen={isCreationModalOpen}
+        onRequestClose={handleCreationModalRequestClose}
+        shouldFocusAfterRender={true}
+        shouldCloseOnEsc={true}
+        shouldCloseOnOverlayClick={true}
+        style={{ content: { overflow: 'visible' } }}
+      >
+        <CreationModal
+          deliveryId={selectedDeliveryId}
+          handleModalClose={handleCreationModalRequestClose}
+          fetchDeliveries={fetchDeliveries}
+          rebuildDeliveriesPage={rebuildDeliveriesPage}
+        />
+      </ReactModal>
 
       {width > 990 ? (
         <DeliveryTable
@@ -251,7 +260,12 @@ const DeliveriesRequests: FC = () => {
   );
 };
 
-const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliveryId, fetchDeliveries, rebuildDeliveriesPage }) => {
+const CreationModal: React.FC<CreationModalProps> = ({
+  handleModalClose,
+  deliveryId,
+  fetchDeliveries,
+  rebuildDeliveriesPage,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
 
@@ -262,10 +276,15 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
       await updateDeliveryStatus(deliveryId, approved === 'approved')
         .then((_) => {
           setIsSubmitting(false);
-          addToast(`Delivery ${approved === null ? 'set as pending' : approved === 'approved' ? 'approved' : 'rejected'} correctly`, {
-            appearance: 'success',
-            autoDismiss: true,
-          });
+          addToast(
+            `Delivery ${
+              approved === null ? 'set as pending' : approved === 'approved' ? 'approved' : 'rejected'
+            } correctly`,
+            {
+              appearance: 'success',
+              autoDismiss: true,
+            },
+          );
           fetchDeliveries();
           handleModalClose();
           rebuildDeliveriesPage();
@@ -286,7 +305,7 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
   return (
     <Formik
       initialValues={{
-        approved: ''
+        approved: '',
       }}
       validateOnBlur={false}
       validateOnChange={false}
@@ -316,12 +335,9 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
                   text="Cancel"
                   isSubmitting={false}
                   canSubmit={true}
-                  onClick={handleCreationModalClosing} />
-                <SubmitButton
-                  text="Accept"
-                  isSubmitting={isSubmitting}
-                  canSubmit={true}
-                  onClick={handleSubmit} />
+                  onClick={handleCreationModalClosing}
+                />
+                <SubmitButton text="Accept" isSubmitting={isSubmitting} canSubmit={true} onClick={handleSubmit} />
               </div>
             </div>
           </div>
@@ -333,29 +349,79 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
 
 type EditButtonProps = {
   id: number;
-  approved: boolean|null;
+  approved: boolean | null;
   onClick: (id: number) => void;
   style?: CSSProperties;
 };
 
 const EditButton: React.FC<EditButtonProps> = ({ id, approved, onClick, style }) => {
   return approved === null ? (
-    <img src={edit} alt={'Edit'} className={'icon'} onClick={() => onClick(id)} style={style} />
+    <button type="button" className="admin-table-action" onClick={() => onClick(id)}>
+      Edit
+    </button>
   ) : (
-    <img src={editDisable} alt={'Edit'} className={'icon'} style={style} />
+    <button className="admin-table-action disabled">Edit</button>
   );
 };
 
 type ApprovedIconProps = {
-  approved: boolean|null;
+  approved: boolean | null;
 };
 
 const ApprovedIcon: React.FC<ApprovedIconProps> = ({ approved }) => {
-  return <Tooltip styles={{content: {position: 'absolute', top: 20, marginLeft: -35}, tooltip: {}, arrow: {display: 'none'}, wrapper: {}, gap: {}}} content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}><img src={approved === null || approved === undefined ? pending : approved ? checked : error} alt={approved === null || approved === undefined ? 'Delivery Pending' : approved ? `Delivery Reviewed` : 'Delivery not Reviewed'} className={'icon'} style={{cursor: 'default'}} /></Tooltip>;
+  return (
+    <Tooltip
+      styles={{
+        content: { position: 'absolute', top: 20, marginLeft: -35 },
+        tooltip: {},
+        arrow: { display: 'none' },
+        wrapper: {},
+        gap: {},
+      }}
+      content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}
+    >
+      <img
+        src={approved === null || approved === undefined ? pending : approved ? checked : error}
+        alt={
+          approved === null || approved === undefined
+            ? 'Delivery Pending'
+            : approved
+            ? `Delivery Reviewed`
+            : 'Delivery not Reviewed'
+        }
+        className={'icon'}
+        style={{ cursor: 'default' }}
+      />
+    </Tooltip>
+  );
 };
 
 const ApprovedIconMobile: React.FC<ApprovedIconProps> = ({ approved }) => {
-  return <Tooltip styles={{content: {position: 'absolute', top: 20, right: 0}, tooltip: {}, arrow: {display: 'none'}, wrapper: {}, gap: {}}} content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}><img src={approved === null || approved === undefined ? pending : approved ? checked : error} alt={approved === null || approved === undefined ? 'Delivery Pending' : approved ? `Delivery Reviewed` : 'Delivery not Reviewed'} className={'icon'} style={{cursor: 'default'}} /></Tooltip>;
+  return (
+    <Tooltip
+      styles={{
+        content: { position: 'absolute', top: 20, right: 0 },
+        tooltip: {},
+        arrow: { display: 'none' },
+        wrapper: {},
+        gap: {},
+      }}
+      content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}
+    >
+      <img
+        src={approved === null || approved === undefined ? pending : approved ? checked : error}
+        alt={
+          approved === null || approved === undefined
+            ? 'Delivery Pending'
+            : approved
+            ? `Delivery Reviewed`
+            : 'Delivery not Reviewed'
+        }
+        className={'icon'}
+        style={{ cursor: 'default' }}
+      />
+    </Tooltip>
+  );
 };
 
 interface DeliveryTableData {
@@ -364,7 +430,7 @@ interface DeliveryTableData {
   event_ids: number[];
   reviewed_by?: string;
   reviewed_date?: string;
-  approved: boolean|null;
+  approved: boolean | null;
 }
 
 type DeliveryTableProps = {
@@ -387,7 +453,10 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
         ),
         disableSortBy: true,
       },
-      { Header: '#', accessor: 'id', disableSortBy: true,
+      {
+        Header: '#',
+        accessor: 'id',
+        disableSortBy: true,
         Cell: ({ value }) => <div className={'center'}>{value}</div>,
       },
       {
@@ -449,61 +518,65 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
   }, [sortBy]);
 
   return (
-    <table className={'backoffice-table fluid'} {...getTableProps()}>
-      <thead>
-        {headerGroups.map((headerGroup, i) => (
-          <tr key={i} {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column, j) => (
-              <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])}>
-                {column.render('Header')}
-                {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody {...getTableBodyProps()}>
-        {!loading &&
-          rows.map((row, i) => {
-            prepareRow(row);
-            return (
-              <React.Fragment key={i + 'fragment'}>
-                <tr key={i + 'row'} {...row.getRowProps()}>
-                  {row.cells.map((cell, j) => {
-                    return (
-                      <td key={j} {...cell.getCellProps()}>
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-                {row.isExpanded ? (
-                  <tr key={i + 'expanded'}>
-                    <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
-                      {
-                        row.original.event_ids.map((id, i) => (
-                          <div key={i + 'subcomponentDiv' + id}>
-                            <EventSubComponent key={i + 'subcomponent' + id} eventId={id}
-                                                    reviewed_by={row.original.reviewed_by} />
-                            {i !== row.original.event_ids.length-1 && <hr key={i + 'subcomponentHr' + id}/>}
-                          </div>
-                        ))
-                      }
-                    </td>
+    <>
+      <table className={'backoffice-table fluid'} {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup, i) => (
+            <tr key={i} {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column, j) => (
+                <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])}>
+                  {column.render('Header')}
+                  {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {!loading &&
+            rows.map((row, i) => {
+              prepareRow(row);
+              return (
+                <React.Fragment key={i + 'fragment'}>
+                  <tr key={i + 'row'} {...row.getRowProps()}>
+                    {row.cells.map((cell, j) => {
+                      return (
+                        <td key={j} {...cell.getCellProps()}>
+                          {cell.render('Cell')}
+                        </td>
+                      );
+                    })}
                   </tr>
-                ) : null}
-              </React.Fragment>
-            );
-          })}
-        {loading && (
-          <tr>
-            <td colSpan={8}>
-              <Loading />
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+                  {row.isExpanded ? (
+                    <tr key={i + 'expanded'}>
+                      <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
+                        {row.original.event_ids.map((id, i) => (
+                          <div key={i + 'subcomponentDiv' + id}>
+                            <EventSubComponent
+                              key={i + 'subcomponent' + id}
+                              eventId={id}
+                              reviewed_by={row.original.reviewed_by}
+                            />
+                            {i !== row.original.event_ids.length - 1 && <hr key={i + 'subcomponentHr' + id} />}
+                          </div>
+                        ))}
+                      </td>
+                    </tr>
+                  ) : null}
+                </React.Fragment>
+              );
+            })}
+          {loading && (
+            <tr>
+              <td colSpan={8} className="loading">
+                <Loading />
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <div className="admin-table-footer" />
+    </>
   );
 };
 
@@ -514,28 +587,38 @@ type EventSubComponentProps = {
 
 const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId, reviewed_by }) => {
   const dateFormatter = (dateString: string) => format(new Date(dateString), 'dd-MMM-yyyy');
-  const [event, setEvent] = useState<PoapEvent|PoapFullEvent|null>(null)
+  const [event, setEvent] = useState<PoapEvent | PoapFullEvent | null>(null);
 
   useEffect(() => {
     async function getEvent() {
-      const event = await getEventById(eventId)
-      if (event) setEvent(event)
+      const event = await getEventById(eventId);
+      if (event) setEvent(event);
     }
-    getEvent().then()
-  }, [eventId])
 
-  return (
-    event ?
-    <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }} className={'subcomponent'}>
+    getEvent().then();
+  }, [eventId]);
+
+  return event ? (
+    <div
+      style={{
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'column',
+      }}
+      className={'subcomponent'}
+    >
       <h4 style={{ fontWeight: 500 }}>
         from {dateFormatter(event.start_date)} to {dateFormatter(event.end_date)} expires{' '}
         {dateFormatter(event.expiry_date)}
       </h4>
       <img src={event.image_url} style={{ maxWidth: '100px', paddingBottom: '5px' }} alt={'event'} />
-      <div className={'ellipsis'} style={{ width: '70%' }}>{event.description}</div>
+      <div className={'ellipsis'} style={{ width: '70%' }}>
+        {event.description}
+      </div>
       <div style={{ textAlign: 'center' }}>Reviewed by: {reviewed_by}</div>
-    </div> : null
-  );
+    </div>
+  ) : null;
 };
 
 const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loading }) => {
