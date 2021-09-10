@@ -989,7 +989,6 @@
 }
 
 .filter-base {
-  min-width: 130px;
   border: 1px solid $grayscale3;
   border-radius: 4px;
   line-height: 14px;
@@ -1000,9 +999,8 @@
 
 .filter-select {
   color: $grayscale6;
-  padding-left: 20px;
   background-color: white;
-  margin-right: 8px;
+  padding: 12px 12px 12px 6px;
 }
 
 .filter-chip {
@@ -1109,6 +1107,65 @@
 
 .relative {
   position: relative;
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 29px;
+
+  @media (max-width: $bp-m) {
+    flex-direction: column;
+  }
+
+  span {
+    white-space: nowrap;
+  }
+
+  .filter-row-content {
+    margin: 0 20px 0 0;
+  }
+
+  .filter-row-content:last-child {
+    margin: 0;
+  }
+
+  .filter-row-pagination {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    span {
+      color: $grayscale4;
+      margin-right: 12px;
+    }
+
+    select {
+      width: 80px;
+      height: 40px;
+    }
+  }
+
+  .filter-row-left-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+
+    @media (max-width: $bp-m) {
+      margin-bottom: 10px;
+    }
+  }
+
+  .filter-row-right-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+  }
 }
 
 .secondary-filters {

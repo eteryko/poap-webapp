@@ -922,26 +922,26 @@ export const EventList: React.FC = () => {
   return (
     <div className={'bk-container'}>
       <h2 className="admin-table-title">Events</h2>
-      <div className="event-top-bar-container">
-        <div className="left_content">
-          <input type="text" placeholder="Search by name" onChange={handleNameChange} />
+
+      <div className="filter-row">
+        <div className="filter-row-left-content">
+          <input type="text" placeholder="Search by name" onChange={handleNameChange} className="filter-row-content" />
+          <div className="filter-row-content filter-row-pagination">
+            <span>Results per page</span>
+            <select className="filter-base filter-select" onChange={handleLimitChange}>
+              <option value={10}>10</option>
+              <option value={100}>100</option>
+              <option value={1000}>1000</option>
+            </select>
+          </div>
         </div>
-        <div className="right_content">
-          <Link to="/admin/events/new" className="btn">
+        <div className="filter-row-right-content">
+          <Link to="/admin/events/new" className="btn filter-row-content">
             Create new POAP
           </Link>
         </div>
       </div>
-      <div className={'secondary-filters'}>
-        <div className={'secondary-filters--pagination'}>
-          Results per page:
-          <select onChange={handleLimitChange}>
-            <option value={10}>10</option>
-            <option value={100}>100</option>
-            <option value={1000}>1000</option>
-          </select>
-        </div>
-      </div>
+
       {isLoadingPaginatedEvents && <Loading />}
 
       {hasErrorPaginatedEvents && <div>There was a problem fetching events</div>}
