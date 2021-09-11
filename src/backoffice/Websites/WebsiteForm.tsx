@@ -14,6 +14,7 @@ import {
   getActiveQrRequests,
   getEventById,
   PoapEvent,
+  QRRequestType,
 } from '../../api';
 
 /* Components */
@@ -306,7 +307,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
         <QrRequestModal
           eventId={eventId}
           secretCode={secretCode}
-          isWebsitesRequest={true}
+          requestType={QRRequestType.secret_website}
           handleModalClose={handleQrRequestModalRequestClose}
           setIsActiveQrRequest={checkActiveQrRequest}
         />

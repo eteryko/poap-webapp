@@ -17,6 +17,7 @@ import checked from '../../images/checked.svg';
 import error from '../../images/error.svg';
 import { format, parse } from 'date-fns';
 import { EventSecretCodeForm } from './EventSecretCodeForm';
+import { PaginatedWebsites } from '../../api';
 
 /* Types */
 type PaginateAction = {
@@ -62,7 +63,7 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
   const fetchWebsites = async () => {
     setIsFetching(true);
     try {
-      const response = await getSecrets(limit, page * limit, activeStatus, timeframe);
+      const response = await getSecrets(limit, page * limit, activeStatus, timeframe) as PaginatedWebsites;
       if (response) {
         setWebsites(response.websites);
         setTotal(response.total);

@@ -22,6 +22,7 @@ import {
   getQrRequests,
   PoapEvent,
   QrRequest,
+  QRRequestType,
   setQrRequests,
   SortCondition,
   SortDirection,
@@ -91,21 +92,21 @@ const QrRequests: FC = () => {
 
     if (reviewedStatus) _status = reviewedStatus === 'reviewed';
 
-    let website_request: boolean | undefined;
+    let requestType: QRRequestType | undefined;
 
     switch (type) {
       case 'website':
-        website_request = true;
+        requestType = QRRequestType.secret_website;
         break;
       case 'qr':
-        website_request = false;
+        requestType = QRRequestType.qr_code;
         break;
       default:
-        website_request = undefined;
+        requestType = undefined;
         break;
     }
 
-    const response = await getQrRequests(limit, page * limit, _status, event_id, sortCondition, website_request);
+    const response = await getQrRequests(limit, page * limit, _status, event_id, sortCondition, requestType);
     const { qr_requests, total } = response;
 
     setTotal(total);
@@ -180,7 +181,7 @@ const QrRequests: FC = () => {
         reviewed_by: request.reviewed ? request.reviewed_by : '-',
         reviewed: request.reviewed,
         amount: `${request.accepted_codes} / ${request.requested_codes}`,
-        website_request: request.website_request,
+        type: request.type,
       };
     });
   };
@@ -379,7 +380,7 @@ interface QrRequestTableData {
   reviewed_by?: string;
   reviewed_date?: string;
   reviewed: boolean;
-  website_request: boolean;
+  type?: QRRequestType;
 }
 
 type QrRequestTableProps = {
@@ -450,8 +451,8 @@ const QrRequestTable: React.FC<QrRequestTableProps> = ({ data, onEdit, onSortCha
       },
       {
         Header: 'Type',
-        accessor: 'website_request',
-        Cell: ({ value }) => <div className={'center'}>{value ? 'website' : 'qr'}</div>,
+        accessor: 'type',
+        Cell: ({ value }) => <div className={'center'}>{value}</div>,
         disableSortBy: true,
       },
       {

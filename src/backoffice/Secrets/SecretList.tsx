@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { useToasts } from 'react-toast-notifications';
 
 /* Helpers */
-import { getEventById, getEvents, getSecretByName, getSecrets, PoapEvent, Website } from '../../api';
+import { EventSecretType, getEventById, getEvents, getSecretByName, getSecrets, PoapEvent, Website } from '../../api';
 
 /* Components */
 import { Loading } from '../../components/Loading';
@@ -17,6 +17,7 @@ import checked from '../../images/checked.svg';
 import error from '../../images/error.svg';
 import { format, parse } from 'date-fns';
 import { EventSecretCodeForm } from './EventSecretCodeForm';
+import { PaginatedSecrets } from '../../api';
 
 /* Types */
 type PaginateAction = {
@@ -62,9 +63,9 @@ const SecretList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
   const fetchWebsites = async () => {
     setIsFetching(true);
     try {
-      const response = await getSecrets(limit, page * limit, activeStatus, timeframe);
+      const response = await getSecrets(limit, page * limit, activeStatus, timeframe, EventSecretType.word) as PaginatedSecrets;
       if (response) {
-        setSecrets(response.websites);
+        setSecrets(response.items);
         setTotal(response.total);
       }
     } catch (e) {

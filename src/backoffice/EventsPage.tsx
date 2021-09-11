@@ -45,6 +45,7 @@ import {
   getTemplates,
   postQrRequests,
   getActiveQrRequests,
+  QRRequestType,
 } from '../api';
 import FormFilterReactSelect from 'components/FormFilterReactSelect';
 
@@ -73,7 +74,7 @@ type QrRequestModalProps = {
   setIsActiveQrRequest: (id: number) => void;
   eventId?: number;
   secretCode?: number;
-  isWebsitesRequest: boolean;
+  requestType: QRRequestType;
 };
 
 type QrRequestFormikValues = {
@@ -484,7 +485,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                       eventId={event?.id}
                       handleModalClose={handleQrRequestModalRequestClose}
                       setIsActiveQrRequest={checkActiveQrRequest}
-                      isWebsitesRequest={false}
+                      requestType={QRRequestType.qr_code}
                     />
                   </ReactModal>
                 </>
@@ -646,7 +647,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
   secretCode,
   handleModalClose,
   setIsActiveQrRequest,
-  isWebsitesRequest,
+  requestType,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
@@ -655,7 +656,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
     setIsSubmitting(true);
     const { requested_codes, secret_code } = values;
     if (eventId) {
-      await postQrRequests(eventId, requested_codes, secret_code, isWebsitesRequest)
+      await postQrRequests(eventId, requested_codes, secret_code, requestType)
         .then((_) => {
           setIsSubmitting(false);
           addToast('QR Request created correctly', {

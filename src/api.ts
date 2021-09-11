@@ -7,6 +7,11 @@ export type Params = {
   [key: string]: string | number | boolean | undefined;
 };
 
+export enum EventSecretType {
+  word = 'word',
+  website = 'website'
+};
+
 export interface TemplatesResponse<Result> {
   total: number;
   next?: string;
@@ -49,10 +54,15 @@ export interface PoapEvent {
   email?: string;
 }
 
+export enum QRRequestType {
+  qr_code = 'qr_code',
+  secret_word = 'secret_word',
+  secret_website = 'secret_website'
+}
+
 export interface QrRequest {
   id: number;
   event_id: number;
-  website_request: boolean;
   requested_codes: number;
   accepted_codes: number;
   created_date: string;
@@ -60,7 +70,8 @@ export interface QrRequest {
   reviewed_by?: string;
   reviewed_date?: string;
   event: PoapEvent;
-  eventWebsite?: EventWebsite;
+  eventSecret?: EventWebsite;
+  type?: QRRequestType;
 }
 
 export interface EventWebsite {
@@ -74,6 +85,7 @@ export interface EventWebsite {
   reviewed: boolean;
   reviewed_by?: string;
   reviewed_date?: Date;
+  type?: EventSecretType;
 }
 
 export interface SortCondition {
@@ -442,7 +454,7 @@ export async function getQrRequests(
   reviewed?: boolean,
   event_id?: number,
   sort_condition?: SortCondition,
-  website_request?: boolean,
+  type?: QRRequestType,
 ): Promise<PaginatedQrRequest> {
   const sort_by = sort_condition?.sort_by;
   const sort_direction = sort_condition?.sort_direction;
@@ -455,7 +467,7 @@ export async function getQrRequests(
       reviewed,
       sort_by,
       sort_direction,
-      website_request,
+      type,
     },
     { sort: false },
   );
@@ -472,13 +484,13 @@ export async function postQrRequests(
   event_id: number,
   requested_codes: number,
   secret_code: number,
-  website_request: boolean,
+  request_type: QRRequestType,
 ): Promise<void> {
   const body = JSON.stringify({
     event_id,
     requested_codes,
     secret_code,
-    website_request,
+    request_type,
   });
 
   return authClient.isAuthenticated()
@@ -1208,6 +1220,13 @@ export interface PaginatedWebsites {
   websites: Website[];
 }
 
+export interface PaginatedSecrets {
+  limit: number;
+  offset: number;
+  total: number;
+  items: Website[];
+}
+
 export type WebsiteClaimUrl = {
   claimName: string;
   claimUrl: string;
@@ -1222,8 +1241,8 @@ export function getSecrets(
   offset: number,
   active: boolean | null,
   timeframe: string | null,
-  type?: string
-): Promise<PaginatedWebsites> {
+  type = EventSecretType.website
+): Promise<PaginatedWebsites | PaginatedSecrets> {
   let paramsObject: any = { limit, offset };
 
   if (active !== null) {
@@ -1276,9 +1295,8 @@ export async function createSecret(
   captcha?: boolean,
   active?: boolean,
   secret_code?: number,
-  type?: string,
+  secret_type?: string,
 ): Promise<Website> {
-  const _type = type ? type : "website"
   const body = JSON.stringify({
     event_id,
     secret_code,
@@ -1287,7 +1305,7 @@ export async function createSecret(
     timezone,
     from,
     to,
-    _type,
+    secret_type,
     captcha,
     active,
   });
@@ -1312,16 +1330,15 @@ export async function updateSecret(
   captcha?: boolean,
   active?: boolean,
   secret_code?: number,
-  type?: string,
+  secret_type?: string,
 ): Promise<Website> {
-  const _type = type ? type : "website"
   const body = JSON.stringify({
     event_id,
     claim_name,
     timezone,
     from,
     to,
-    _type, //TODO: aca y en get/create/etc si esta vacio poner "website" o lo dejo vacio?
+    secret_type,
     captcha,
     active,
     secret_code,

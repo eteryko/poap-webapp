@@ -5,13 +5,13 @@ import QRCode from 'qrcode.react';
 import PoapQrLogo from '../../images/poap_qr.png';
 
 /* Helpers */
-import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest } from '../../lib/schemas';
+import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest, WordSchameWithActiveRequest, WordSchameWithoutActiveRequest } from '../../lib/schemas';
 import {
   Website,
   getSecretByEventIdAndSecretCode,
   getActiveQrRequests,
   getEventById,
-  PoapEvent, updateSecret, createSecret,
+  PoapEvent, updateSecret, createSecret, QRRequestType,
 } from '../../api';
 
 /* Components */
@@ -221,7 +221,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             startDateTime.toISOString(),
             endDateTime.toISOString(),
             timezone,
-            undefined,
+            false,
             activeWebsite,
             secretCode,
             "word",
@@ -300,7 +300,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
         <QrRequestModal
           eventId={eventId}
           secretCode={secretCode}
-          isWebsitesRequest={true}
+          requestType={QRRequestType.secret_website}
           handleModalClose={handleQrRequestModalRequestClose}
           setIsActiveQrRequest={checkActiveQrRequest}
         />
@@ -339,7 +339,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             enableReinitialize
             validateOnBlur={false}
             validateOnChange={false}
-            validationSchema={isActiveQrRequest ? WebsiteSchemaWithActiveRequest : WebsiteSchemaWithoutActiveRequest}
+            validationSchema={isActiveQrRequest ? WordSchameWithActiveRequest: WordSchameWithoutActiveRequest}
             onSubmit={onSubmit}
           >
             {({ values, errors, isSubmitting, setFieldValue }) => {
@@ -368,7 +368,10 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
                   <h3>General Info</h3>
                   <div>
                     <div className={'col-xs-12'}>
-                      <EventField title="Secret Name" name="secretWord" />
+                      <EventField
+                        title="Secret Name"
+                        name="secretWord"
+                        />
                     </div>
                   </div>
                   <div className={'date-row'}>
@@ -450,7 +453,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
                     <div className={'col-xs-8'}>
                       <div className={'checkbox-field'} onClick={toggleActiveWebsite}>
                         <input type="checkbox" checked={activeWebsite} readOnly name="website" />
-                        <label>Active Website</label>
+                        <label>Active Secret</label>
                       </div>
                     </div>
                   </div>
