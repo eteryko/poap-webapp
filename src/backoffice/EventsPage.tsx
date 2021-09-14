@@ -1,7 +1,17 @@
 import React, { useCallback, useState, ReactElement, useEffect, useMemo, ChangeEvent, ReactNode } from 'react';
 import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import classNames from 'classnames';
-import { Formik, Form, Field, ErrorMessage, FieldProps, FormikActions, FormikHandlers, FormikProps } from 'formik';
+import {
+  Formik,
+  Form,
+  Field,
+  ErrorMessage,
+  FieldProps,
+  FormikActions,
+  FormikHandlers,
+  FormikProps,
+  isNaN
+} from "formik";
 import DayPickerInput from 'react-day-picker/DayPickerInput';
 import 'react-day-picker/lib/style.css';
 import { format } from 'date-fns';
@@ -201,10 +211,21 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const history = useHistory();
   const veryOldDate = new Date('1900-01-01');
   const veryFutureDate = new Date('2200-01-01');
-  const dateFormatter = (day: Date | number) => format(day, 'MM-dd-yyyy');
-  const dateFormatterString = (date: string) => {
-    const parts = date.split('-');
-    return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+  const dateFormatter = (day: Date | number) => format(day, 'yyyy-MM-dd');
+  const dateToSubmitFormatter = (dateString: string) => {
+    const date = new Date(dateString);
+    if(isNaN(date.getTime()))
+      return '';
+
+    /* https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off */
+    const dateUTC = new Date( date.getTime() + Math.abs(date.getTimezoneOffset() * 60000));
+    return format(dateUTC, 'MM-dd-yyyy');
+  };
+
+  const addDays = (date: string | number | Date, days: number) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   };
 
   const fetchTemplates = useCallback(() => getTemplates({ limit: 1000 }), []);
@@ -328,8 +349,6 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
     setIsQrRequestModalOpen(true);
   };
 
-  const day = 60 * 60 * 24 * 1000;
-
   const warning = (
     <div key={''} className={'backoffice-tooltip'}>
       {' '}
@@ -425,7 +444,16 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
               formData.append(key, typeof value === 'number' ? String(value) : value);
             });
 
-            formData.append('virtual_event', String(virtualEvent));
+            /*
+                Format all dates for retrocompatibility
+                of how the dates are sent
+                to the API (MM-dd-yyyy)
+            */
+            formData.set('start_date', dateToSubmitFormatter(othersKeys.start_date));
+            formData.set('end_date', dateToSubmitFormatter(othersKeys.end_date));
+            formData.set('expiry_date', dateToSubmitFormatter(othersKeys.expiry_date));
+
+            formData.set('virtual_event', String(virtualEvent));
 
             if (create) {
               await createEvent(formData!);
@@ -551,12 +579,12 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.start_date}
-                  value={values.start_date !== '' ? new Date(dateFormatterString(values.start_date).getTime()) : ''}
+                  value={values.start_date !== '' ? new Date(values.start_date) : ''}
                   disabled={false}
                   disabledDays={
                     values.end_date !== ''
                       ? {
-                        from: new Date(dateFormatterString(values.end_date).getTime() + day),
+                        from: addDays(values.end_date, 1),
                         to: veryFutureDate,
                       }
                       : undefined
@@ -568,13 +596,13 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.end_date}
-                  value={values.end_date !== '' ? new Date(dateFormatterString(values.end_date).getTime()) : ''}
+                  value={values.end_date !== '' ? new Date(values.end_date) : ''}
                   disabled={!multiDay}
                   disabledDays={
                     values.start_date !== ''
                       ? {
                         from: veryOldDate,
-                        to: new Date(dateFormatterString(values.start_date).getTime()),
+                        to: new Date(values.start_date),
                       }
                       : undefined
                   }
@@ -586,14 +614,14 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   setFieldValue={setFieldValue}
                   placeholder={values.expiry_date}
                   helpText="After this date, users will no longer be able to mint this event's POAP"
-                  value={values.expiry_date !== '' ? new Date(dateFormatterString(values.expiry_date).getTime()) : ''}
+                  value={values.expiry_date !== '' ? new Date(values.expiry_date) : ''}
                   disabled={!values.end_date}
                   disabledDays={
                     values.end_date !== ''
                       ? [
                         {
                           from: veryOldDate,
-                          to: new Date(dateFormatterString(values.end_date).getTime()),
+                          to: new Date(values.end_date),
                         },
                         {
                           from: veryOldDate,
@@ -664,12 +692,12 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
 };
 
 export const QrRequestModal: React.FC<QrRequestModalProps> = ({
-  eventId,
-  secretCode,
-  handleModalClose,
-  setIsActiveQrRequest,
-  isWebsitesRequest,
-}) => {
+                                                                eventId,
+                                                                secretCode,
+                                                                handleModalClose,
+                                                                setIsActiveQrRequest,
+                                                                isWebsitesRequest,
+                                                              }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
 
@@ -758,16 +786,16 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
 };
 
 const DayPickerContainer = ({
-  text,
-  dayToSetup,
-  handleDayClick,
-  setFieldValue,
-  placeholder,
-  disabledDays,
-  disabled,
-  value,
-  helpText,
-}: DatePickerContainerProps) => {
+                              text,
+                              dayToSetup,
+                              handleDayClick,
+                              setFieldValue,
+                              placeholder,
+                              disabledDays,
+                              disabled,
+                              value,
+                              helpText,
+                            }: DatePickerContainerProps) => {
   const handleDayChange = (day: Date) => handleDayClick(day, dayToSetup, setFieldValue);
   let _value = value;
   if (value instanceof Date) {
@@ -808,15 +836,15 @@ const DayPickerContainer = ({
 };
 
 export const ImageContainer = ({
-  text,
-  handleFileChange,
-  setFieldValue,
-  errors,
-  shouldShowInfo = true,
-  disabled = false,
-  customLabel,
-  name,
-}: ImageContainerProps) => (
+                                 text,
+                                 handleFileChange,
+                                 setFieldValue,
+                                 errors,
+                                 shouldShowInfo = true,
+                                 disabled = false,
+                                 customLabel,
+                                 name,
+                               }: ImageContainerProps) => (
   <div className={classNames('date-picker-container', !shouldShowInfo && 'h78')}>
     {customLabel ? <span>{React.cloneElement(customLabel)}</span> : <label>{text}</label>}
     <input
@@ -949,13 +977,13 @@ export const EventList: React.FC = () => {
       {hasErrorPaginatedEvents && <div>There was a problem fetching events</div>}
 
       {paginatedEvent &&
-        <EventTable
-          events={paginatedEvent.items}
-          total={paginatedEvent.total}
-          limit={paginatedEvent.limit}
-          onChangePage={(page) => setOffset(page * paginatedEvent.limit)}
-          onChangeSort={setOrderBy}
-        />}
+      <EventTable
+        events={paginatedEvent.items}
+        total={paginatedEvent.total}
+        limit={paginatedEvent.limit}
+        onChangePage={(page) => setOffset(page * paginatedEvent.limit)}
+        onChangeSort={setOrderBy}
+      />}
     </div>
   );
 };
