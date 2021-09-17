@@ -71,7 +71,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   };
 
   const formatTime = (date: Date): string => {
-    return format(date, 'hh:mm');
+    return format(date, 'HH:mm');
   };
 
   const setWebsite = (website?: Website): void => {
