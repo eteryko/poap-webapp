@@ -7,6 +7,11 @@ export type Params = {
   [key: string]: string | number | boolean | undefined;
 };
 
+export enum EventSecretType {
+  word = 'word',
+  website = 'website',
+}
+
 export interface TemplatesResponse<Result> {
   total: number;
   next?: string;
@@ -49,18 +54,29 @@ export interface PoapEvent {
   email?: string;
 }
 
-export interface QrRequest {
+export interface RedeemRequest {
   id: number;
   event_id: number;
-  website_request: boolean;
   requested_codes: number;
   accepted_codes: number;
   created_date: string;
+  type: RedeemRequestType;
   reviewed: boolean;
   reviewed_by?: string;
   reviewed_date?: string;
   event: PoapEvent;
-  eventWebsite?: EventWebsite;
+  eventSecret?: EventWebsite;
+}
+
+export interface RedeemRequestCount {
+  active: number;
+  type: RedeemRequestType;
+}
+
+export enum RedeemRequestType {
+  qr_code = 'qr_code',
+  secret_website = 'secret_website',
+  secret_word = 'secret_word',
 }
 
 export interface EventWebsite {
@@ -74,6 +90,7 @@ export interface EventWebsite {
   reviewed: boolean;
   reviewed_by?: string;
   reviewed_date?: Date;
+  type?: EventSecretType;
 }
 
 export interface SortCondition {
@@ -303,15 +320,11 @@ export type PaginatedQrCodes = {
   qr_claims: QrCode[];
 };
 
-export type PaginatedQrRequest = {
+export type PaginatedRedeemRequest = {
   limit: number;
   offset: number;
   total: number;
-  qr_requests: QrRequest[];
-};
-
-export type ActiveQrRequest = {
-  active: number;
+  redeem_requests: RedeemRequest[];
 };
 
 export type ENSQueryResult = { valid: false } | { valid: true; ens: string };
@@ -436,14 +449,14 @@ export async function getEvents(expired?: boolean): Promise<PoapEvent[]> {
   return authClient.isAuthenticated() ? secureFetch(url) : fetchJson(url);
 }
 
-export async function getQrRequests(
+export async function getRedeemRequests(
   limit: number,
   offset: number,
   reviewed?: boolean,
   event_id?: number,
   sort_condition?: SortCondition,
-  website_request?: boolean,
-): Promise<PaginatedQrRequest> {
+  redeem_type?: string,
+): Promise<PaginatedRedeemRequest> {
   const sort_by = sort_condition?.sort_by;
   const sort_direction = sort_condition?.sort_direction;
 
@@ -455,59 +468,62 @@ export async function getQrRequests(
       reviewed,
       sort_by,
       sort_direction,
-      website_request,
+      redeem_type,
     },
     { sort: false },
   );
   try {
     return authClient.isAuthenticated()
-      ? secureFetch(`${API_BASE}/qr-requests?${params}`)
-      : fetchJson(`${API_BASE}/qr-requests?${params}`);
+      ? secureFetch(`${API_BASE}/redeem-requests?${params}`)
+      : fetchJson(`${API_BASE}/redeem-requests?${params}`);
   } catch (e) {
     return e;
   }
 }
 
-export async function postQrRequests(
+export async function postRedeemRequests(
   event_id: number,
   requested_codes: number,
   secret_code: number,
-  website_request: boolean,
+  redeem_type: RedeemRequestType,
 ): Promise<void> {
   const body = JSON.stringify({
     event_id,
     requested_codes,
     secret_code,
-    website_request,
+    redeem_type,
   });
 
   return authClient.isAuthenticated()
-    ? secureFetch(`${API_BASE}/qr-requests`, {
-      method: 'POST',
-      body,
-      headers: { 'Content-Type': 'application/json' },
-    })
-    : fetchJson(`${API_BASE}/qr-requests`, {
-      method: 'POST',
-      body,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    ? secureFetch(`${API_BASE}/redeem-requests`, {
+        method: 'POST',
+        body,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    : fetchJson(`${API_BASE}/redeem-requests`, {
+        method: 'POST',
+        body,
+        headers: { 'Content-Type': 'application/json' },
+      });
 }
 
-export async function getActiveQrRequests(event_id?: number): Promise<ActiveQrRequest> {
-  const params = queryString.stringify({ event_id }, { sort: false });
+export async function getActiveRedeemRequests(
+  event_id?: number,
+  redeem_type?: RedeemRequestType,
+): Promise<RedeemRequestCount[]> {
+  const params = queryString.stringify({ event_id, redeem_type }, { sort: false });
   try {
     return authClient.isAuthenticated()
-      ? secureFetch(`${API_BASE}/qr-requests/active/count?${params}`)
-      : fetchJson(`${API_BASE}/qr-requests/active/count?${params}`);
+      ? secureFetch(`${API_BASE}/redeem-requests/active/count?${params}`)
+      : fetchJson(`${API_BASE}/redeem-requests/active/count?${params}`);
   } catch (e) {
     return e;
   }
 }
 
-export async function setQrRequests(id: number, accepted_codes: number): Promise<void> {
+export async function updateRedeemRequests(id: number, accepted_codes: number): Promise<void> {
   try {
-    return secureFetch(`${API_BASE}/qr-requests/${id}`, {
+    return secureFetch(`${API_BASE}/redeem-requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
         id,
@@ -724,24 +740,24 @@ export async function qrCodesRangeAssign(
 
   return isAdmin
     ? secureFetchNoResponse(`${API_BASE}/qr-code/range-assign`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        numeric_id_min: from,
-        numeric_id_max: to,
-        event_id: eventId,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    })
+        method: 'PUT',
+        body: JSON.stringify({
+          numeric_id_min: from,
+          numeric_id_max: to,
+          event_id: eventId,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      })
     : fetchJsonNoResponse(`${API_BASE}/qr-code/range-assign`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        numeric_id_min: from,
-        numeric_id_max: to,
-        event_id: eventId,
-        passphrase,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
+        method: 'PUT',
+        body: JSON.stringify({
+          numeric_id_min: from,
+          numeric_id_max: to,
+          event_id: eventId,
+          passphrase,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
 }
 
 export async function qrCodesListAssign(
@@ -790,22 +806,22 @@ export async function qrCodesSelectionUpdate(
 
   return isAdmin
     ? secureFetchNoResponse(`${API_BASE}/qr-code/update`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        qr_code_ids: qrCodesIds,
-        event_id: eventId,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    })
+        method: 'PUT',
+        body: JSON.stringify({
+          qr_code_ids: qrCodesIds,
+          event_id: eventId,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      })
     : fetchJsonNoResponse(`${API_BASE}/qr-code/update`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        qr_code_ids: qrCodesIds,
-        event_id: eventId,
-        passphrase,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
+        method: 'PUT',
+        body: JSON.stringify({
+          qr_code_ids: qrCodesIds,
+          event_id: eventId,
+          passphrase,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
 }
 
 export async function generateRandomCodes(event_id: number, amount: number, delegated_mint: boolean): Promise<void> {
@@ -1096,7 +1112,11 @@ export function getDelivery(id: string | number): Promise<Delivery> {
   return fetchJson(`${API_BASE}/delivery/${id}`);
 }
 
-export function getDeliveryAddresses(id: string | number, limit: number, offset: number): Promise<PaginatedDeliveryAddresses> {
+export function getDeliveryAddresses(
+  id: string | number,
+  limit: number,
+  offset: number,
+): Promise<PaginatedDeliveryAddresses> {
   const params = queryString.stringify({ limit, offset });
   return fetchJson(`${API_BASE}/delivery-addresses/${id}?${params}`);
 }
@@ -1212,7 +1232,7 @@ export function rebuildDeliveries(): Promise<Delivery> {
 }
 
 /* Websites */
-export type Website = {
+export type Secret = {
   claim_name: string;
   active: boolean;
   captcha: boolean;
@@ -1220,15 +1240,15 @@ export type Website = {
   from: string;
   to: string;
   timezone: number;
-  event_id?: number;
+  event_id: number;
   deliveriesCount?: { total: number; claimed: number };
 };
 
-export interface PaginatedWebsites {
+export interface PaginatedSecrets {
   limit: number;
   offset: number;
   total: number;
-  websites: Website[];
+  items: Secret[];
 }
 
 export type WebsiteClaimUrl = {
@@ -1240,12 +1260,13 @@ export type WebsiteClaimUrl = {
   time: Date;
 };
 
-export function getWebsites(
+export function getSecrets(
   limit: number,
   offset: number,
   active: boolean | null,
   timeframe: string | null,
-): Promise<PaginatedWebsites> {
+  type: EventSecretType,
+): Promise<PaginatedSecrets> {
   let paramsObject: any = { limit, offset };
 
   if (active !== null) {
@@ -1256,24 +1277,32 @@ export function getWebsites(
     paramsObject['timeframe'] = timeframe;
   }
 
+  if (type !== undefined) {
+    paramsObject['secret_type'] = type;
+  }
+
   const params = queryString.stringify(paramsObject);
-  return secureFetch(`${API_BASE}/websites?${params}`);
+  return secureFetch(`${API_BASE}/secrets?${params}`);
 }
 
-export function getWebsiteByEventIdAndSecretCode(eventId: number, secret_code?: number): Promise<Website> {
+export function getSecretByEventIdAndSecretCode(
+  eventId: number,
+  secret_type: EventSecretType,
+  secret_code?: number,
+): Promise<Secret> {
   const body = JSON.stringify(secret_code ? { secret_code } : {});
   const payload: RequestInit = {
     method: 'POST',
     body,
     headers: { 'Content-Type': 'application/json' },
   };
-  const url = `${API_BASE}/website/event/id/${eventId}`;
+  const url = `${API_BASE}/secret/event/id/${eventId}?secret_type=${secret_type}`;
 
   return authClient.isAuthenticated() ? secureFetch(url, payload) : fetchJson(url, payload);
 }
 
-export function getWebsiteByName(claimName: string): Promise<Website> {
-  return secureFetch(`${API_BASE}/admin/website/${claimName}`);
+export function getSecretByName(claimName: string): Promise<Secret> {
+  return secureFetch(`${API_BASE}/secret/${claimName}`);
 }
 
 export function getWebsiteClaimUrls(claimName: string, claimed?: boolean): Promise<WebsiteClaimUrl[]> {
@@ -1284,17 +1313,18 @@ export function getWebsiteClaimUrls(claimName: string, claimed?: boolean): Promi
   return secureFetch(`${API_WEBSITES}/admin/delivery/${claimName}`);
 }
 
-export async function createWebsite(
+export async function createSecret(
   event_id: number,
   claim_name: string,
   requested_codes: number,
   timezone: number,
+  secret_type: EventSecretType,
   from?: string,
   to?: string,
   captcha?: boolean,
   active?: boolean,
   secret_code?: number,
-): Promise<Website> {
+): Promise<Secret> {
   const body = JSON.stringify({
     event_id,
     secret_code,
@@ -1303,6 +1333,7 @@ export async function createWebsite(
     timezone,
     from,
     to,
+    secret_type,
     captcha,
     active,
   });
@@ -1313,27 +1344,29 @@ export async function createWebsite(
     headers: { 'Content-Type': 'application/json' },
   };
 
-  const url: string = `${API_BASE}/website-requests`;
+  const url: string = `${API_BASE}/secret-requests`; //TODO: test endpoint
 
   return authClient.isAuthenticated() ? await secureFetch(url, payload) : await fetchJson(url, payload);
 }
 
-export async function updateWebsite(
+export async function updateSecret(
   event_id: number,
   claim_name: string,
   from: string,
   to: string,
   timezone: number,
+  secret_type: EventSecretType,
   captcha?: boolean,
   active?: boolean,
   secret_code?: number,
-): Promise<Website> {
+): Promise<Secret> {
   const body = JSON.stringify({
     event_id,
     claim_name,
     timezone,
     from,
     to,
+    secret_type,
     captcha,
     active,
     secret_code,
@@ -1346,12 +1379,12 @@ export async function updateWebsite(
     headers: { 'Content-Type': 'application/json' },
   };
 
-  const url = `${API_BASE}/website-requests`;
+  const url = `${API_BASE}/secret-requests`;
 
   return authClient.isAuthenticated() ? await secureFetch(url, payload) : await fetchJson(url, payload);
 }
 
-export async function deleteClaimUrl(claimUrl: string): Promise<Website> {
+export async function deleteClaimUrl(claimUrl: string): Promise<Secret> {
   return secureFetch(`${API_WEBSITES}/admin/delivery/`, {
     method: 'DELETE',
     body: JSON.stringify({
@@ -1419,7 +1452,12 @@ export async function validateEventAndSecretCode(event_id: number, secret_code: 
   }
 }
 
-export async function getPaginatedEvents(filter: EventFilter, offset?: number, limit?: number, sort?: SortCondition): Promise<PaginatedEvent> {
+export async function getPaginatedEvents(
+  filter: EventFilter,
+  offset?: number,
+  limit?: number,
+  sort?: SortCondition,
+): Promise<PaginatedEvent> {
   const params = queryString.stringify({
     ...filter,
     from_date: filter.from_date ? filter.from_date.toISOString() : undefined,
@@ -1427,7 +1465,7 @@ export async function getPaginatedEvents(filter: EventFilter, offset?: number, l
     offset,
     limit,
     sort_dir: sort?.sort_direction,
-    sort_field: sort?.sort_by
+    sort_field: sort?.sort_by,
   });
   const url = `${API_BASE}/paginated-events?${params}`;
   const fetcher = authClient.isAuthenticated() ? secureFetch : fetchJson;

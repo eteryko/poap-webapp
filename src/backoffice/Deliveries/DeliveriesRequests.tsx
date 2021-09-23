@@ -7,9 +7,9 @@ import { Formik } from 'formik';
 import { useToasts } from 'react-toast-notifications';
 
 /* Components */
-import { Loading } from '../components/Loading';
-import FilterSelect from '../components/FilterSelect';
-import { SubmitButton } from '../components/SubmitButton';
+import { Loading } from '../../components/Loading';
+import FilterSelect from '../../components/FilterSelect';
+import { SubmitButton } from '../../components/SubmitButton';
 import { Column, SortingRule, useExpanded, useSortBy, useTable } from 'react-table';
 
 /* Helpers */
@@ -19,19 +19,19 @@ import {
   PoapEvent, PoapFullEvent, rebuildDeliveries,
   SortCondition,
   SortDirection, updateDeliveryStatus,
-} from '../api';
+} from '../../api';
 import { format } from 'date-fns';
-import { timeSince } from '../lib/helpers';
+import { timeSince } from '../../lib/helpers';
 import { useWindowWidth } from '@react-hook/window-size/throttled';
 
 /* Assets */
 import edit from 'images/edit.svg';
 import editDisable from 'images/edit-disable.svg';
-import checked from '../images/checked.svg';
-import error from '../images/error.svg';
-import pending from '../images/pending.svg';
+import checked from '../../images/checked.svg';
+import error from '../../images/error.svg';
+import pending from '../../images/pending.svg';
 import { Tooltip } from 'react-lightweight-tooltip';
-import { ExpandedIcon, SortIcon } from './RequestsComponents';
+import { ExpandedIcon, SortIcon } from '../RequestsComponents';
 
 type PaginateAction = {
   selected: number;

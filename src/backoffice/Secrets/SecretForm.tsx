@@ -1,11 +1,9 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useToasts } from 'react-toast-notifications';
 import { Form, Formik, FormikActions } from 'formik';
-import QRCode from 'qrcode.react';
-import PoapQrLogo from '../../images/poap_qr.png';
 
 /* Helpers */
-import { WebsiteSchemaWithActiveRequest, WebsiteSchemaWithoutActiveRequest } from '../../lib/schemas';
+import { WordSchemaWithActiveRequest, WordSchemaWithoutActiveRequest } from '../../lib/schemas';
 import {
   createSecret,
   EventSecretType,
@@ -29,17 +27,15 @@ import FormFilterReactSelect from '../../components/FormFilterReactSelect';
 import { timezones } from '../Checkouts/_helpers/Timezones';
 import ReactModal from 'react-modal';
 import { Tooltip } from 'react-lightweight-tooltip';
-import { Button } from '../../components/Button';
 
 /* Types */
 type WebsiteFormType = {
-  claimName: string;
+  secretWord: string;
   timezone: number;
   start_date: string;
   start_time: string;
   end_date: string;
   end_time: string;
-  captcha: boolean;
   active: boolean;
   codesQuantity: number;
 };
@@ -50,13 +46,11 @@ type WebsiteFormProps = {
   maybeEvent?: PoapEvent;
 };
 
-const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) => {
+const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) => {
   /* State */
   const [website, _setWebsite] = useState<Secret | null>(null);
   const [activeWebsite, setActiveWebsite] = useState<boolean>(true);
-  const [activeCaptcha, setActiveCaptcha] = useState<boolean>(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
-  const [isQrGeneratorModalOpen, setIsQrGeneratorModalOpen] = useState<boolean>(false);
   const [isActiveQrRequest, setIsActiveQrRequest] = useState<boolean>(false);
   const [edit, setEdit] = useState<boolean>(false);
   const [isFetchingWebsite, setIsFetchingWebsite] = useState<boolean>(true);
@@ -65,7 +59,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
     return !!event && isAfter(new Date(), parse(event.expiry_date, 'dd-mmm-yy', new Date()));
   }, [event]);
 
-  const DAY = 24 * 60 * 60 * 1000;
   const parseDate = (date: string, time: string, timezone: number): Date => {
     const timezoneString = ('00' + Math.abs(timezone)).slice(-2) + '00';
     const dateString = `${date}T${time}${timezone >= 0 ? `+${timezoneString}` : `-${timezoneString}`}`;
@@ -84,7 +77,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
     if (website) {
       _setWebsite(website);
       setActiveWebsite(website.active);
-      setActiveCaptcha(website.captcha);
       setEdit(true);
     } else {
       setEdit(false);
@@ -93,9 +85,8 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
 
   const initialValues = useMemo(() => {
     let values: WebsiteFormType = {
-      claimName: '',
+      secretWord: '',
       active: true,
-      captcha: false,
       start_date: '',
       start_time: '',
       timezone: 0,
@@ -110,14 +101,13 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
       const to = new Date(new Date(website.to).getTime() + tzDelta);
 
       values = {
-        claimName: website.claim_name,
+        secretWord: website.claim_name,
         timezone: website.timezone,
         start_date: formatDate(from),
         start_time: formatTime(from),
         end_date: formatDate(to),
         end_time: formatTime(to),
         active: website.active,
-        captcha: website.captcha,
         codesQuantity: 1,
       };
     }
@@ -130,13 +120,14 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   /* Effects */
   useEffect(() => {
     setIsFetchingWebsite(true);
-    if (!maybeEvent) {
+
+    if (!event) {
       fetchEvent().then();
     }
 
     checkActiveQrRequest(eventId).then();
 
-    fetchWebsite().then(() => {
+    fetchSecret().then(() => {
       setIsFetchingWebsite(false);
     });
   }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
@@ -146,7 +137,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
     try {
       const _event = await getEventById(eventId);
       if (_event) {
-        setEvent(event);
+        setEvent(_event);
       } else {
         addToast('Error while fetching event', {
           appearance: 'error',
@@ -161,9 +152,9 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
     }
   };
 
-  const fetchWebsite = async () => {
+  const fetchSecret = async () => {
     try {
-      const _website = await getSecretByEventIdAndSecretCode(eventId, EventSecretType.website, secretCode);
+      const _website = await getSecretByEventIdAndSecretCode(eventId, EventSecretType.word, secretCode);
       setWebsite(_website);
     } catch (e) {
       //do nothing
@@ -175,7 +166,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   };
 
   const toggleActiveWebsite = () => setActiveWebsite(!activeWebsite);
-  const toggleActiveCaptcha = () => setActiveCaptcha(!activeCaptcha);
 
   // Edition Loading Component
   if (edit && !website) {
@@ -190,7 +180,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   //Submit form
   const onSubmit = async (submittedValues: WebsiteFormType, actions: FormikActions<WebsiteFormType>) => {
     try {
-      const { claimName, start_date, start_time, end_date, end_time, timezone, codesQuantity } = submittedValues;
+      const { secretWord, start_date, start_time, end_date, end_time, timezone, codesQuantity } = submittedValues;
 
       const startDateTime: Date = parseDate(start_date, start_time, timezone);
       const endDateTime: Date = parseDate(end_date, end_time, timezone);
@@ -208,39 +198,39 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
         if (!edit) {
           await createSecret(
             eventId,
-            claimName,
+            secretWord,
             codesQuantity,
             timezone,
-            EventSecretType.website,
+            EventSecretType.word,
             startDateTime.toISOString(),
             endDateTime.toISOString(),
-            activeCaptcha,
+            undefined,
             activeWebsite,
             secretCode,
           );
 
-          const website = await getSecretByEventIdAndSecretCode(eventId, EventSecretType.website, secretCode);
+          const website = await getSecretByEventIdAndSecretCode(eventId, EventSecretType.word, secretCode);
 
           setWebsite(website);
 
-          addToast('Website created correctly', {
+          addToast('Secret created correctly', {
             appearance: 'success',
             autoDismiss: true,
           });
         } else {
           await updateSecret(
             eventId,
-            claimName,
+            secretWord,
             startDateTime.toISOString(),
             endDateTime.toISOString(),
             timezone,
-            EventSecretType.website,
-            activeCaptcha,
+            EventSecretType.word,
+            false,
             activeWebsite,
             secretCode,
           );
 
-          addToast('Website updated correctly', {
+          addToast('Secret updated correctly', {
             appearance: 'success',
             autoDismiss: true,
           });
@@ -264,19 +254,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
     }
   };
 
-  const downloadQR = () => {
-    const canvas = document.getElementById('qrCodeCanvasID') as HTMLCanvasElement;
-    if (!canvas) return;
-    const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-    let downloadLink = document.createElement('a');
-    downloadLink.href = pngUrl;
-    const pngName = website ? website.claim_name : 'qrCode';
-    downloadLink.download = `${pngName}.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  };
-
   const handleQrRequestModalRequestClose = (): void => {
     setIsQrModalOpen(false);
   };
@@ -286,17 +263,12 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   };
 
   const checkActiveQrRequest = async (id: number) => {
-    const active = await getActiveRedeemRequests(id, RedeemRequestType.secret_website);
+    const active = await getActiveRedeemRequests(id, RedeemRequestType.secret_word);
     if (active.length > 0) {
       setIsActiveQrRequest(true);
     } else {
       setIsActiveQrRequest(false);
     }
-  };
-
-  const getWebsiteUrl = (): string => {
-    if (!website) return '';
-    return `${process.env.REACT_APP_WEBSITES_URL}/${website.claim_name}`;
   };
 
   return (
@@ -308,42 +280,19 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
         shouldFocusAfterRender={true}
         shouldCloseOnEsc={true}
         shouldCloseOnOverlayClick={true}
-        style={{ content: { overflow: 'visible' } }}
+        style={{
+          content: {
+            overflow: 'visible',
+          },
+        }}
       >
         <QrRequestModal
           eventId={eventId}
           secretCode={secretCode}
-          type={RedeemRequestType.secret_website}
+          type={RedeemRequestType.secret_word}
           handleModalClose={handleQrRequestModalRequestClose}
           setIsActiveQrRequest={checkActiveQrRequest}
         />
-      </ReactModal>
-      <ReactModal
-        isOpen={isQrGeneratorModalOpen}
-        onRequestClose={() => setIsQrGeneratorModalOpen(false)}
-        shouldFocusAfterRender={true}
-        shouldCloseOnEsc={true}
-        shouldCloseOnOverlayClick={true}
-      >
-        <div className={'row'}>
-          <div className={'col-md-12'} style={{ textAlign: 'center' }}>
-            <QRCode
-              id="qrCodeCanvasID"
-              value={getWebsiteUrl()}
-              size={320}
-              includeMargin={true}
-              level="H"
-              imageSettings={{
-                src: PoapQrLogo,
-                width: 80,
-                height: 80,
-              }}
-            />
-          </div>
-          <div className={'col-md-12'} style={{ textAlign: 'center' }}>
-            <Button action={downloadQR} text="Download QR" extraClass="" />
-          </div>
-        </div>
       </ReactModal>
       {/*End Modals*/}
       <div className={'bk-container'}>
@@ -353,7 +302,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             enableReinitialize
             validateOnBlur={false}
             validateOnChange={false}
-            validationSchema={isActiveQrRequest ? WebsiteSchemaWithActiveRequest : WebsiteSchemaWithoutActiveRequest}
+            validationSchema={isActiveQrRequest ? WordSchemaWithActiveRequest : WordSchemaWithoutActiveRequest}
             onSubmit={onSubmit}
           >
             {({ values, errors, isSubmitting, setFieldValue }) => {
@@ -363,7 +312,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
               let startDateLimit =
                 values.end_date !== ''
                   ? {
-                      from: new Date(new Date(values.end_date + 'T00:00:00').getTime() + DAY),
+                      from: new Date(new Date(values.end_date).setHours(0, 0, 0, 0)),
                       to: new Date('2030-01-01'),
                     }
                   : undefined;
@@ -372,17 +321,17 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                 values.start_date !== ''
                   ? {
                       from: new Date('2021-01-01'),
-                      to: new Date(new Date(values.start_date + 'T00:00:00').getTime() - DAY),
+                      to: new Date(new Date(values.start_date).setHours(23, 59, 59, 999)),
                     }
                   : undefined;
 
               return (
                 <Form className={'website-admin-form'}>
-                  <h2>{edit ? 'Edit Website' : 'Create Website'} </h2>
+                  <h2>{edit ? 'Edit Secret' : 'Create Secret'} </h2>
                   <h3>General Info</h3>
                   <div>
                     <div className={'col-xs-12'}>
-                      <EventField title="Website Name" name="claimName" />
+                      <EventField title="Secret Name" name="secretWord" />
                     </div>
                   </div>
                   <div className={'date-row'}>
@@ -412,7 +361,12 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                       />
                       <EventField disabled={false} title="" name="end_time" type="time" />
                     </div>
-                    <div className={'col-xs-12 col-md-4'} style={{ paddingBottom: '5px' }}>
+                    <div
+                      className={'col-xs-12 col-md-4'}
+                      style={{
+                        paddingBottom: '5px',
+                      }}
+                    >
                       <FormFilterReactSelect
                         label="Timezone"
                         name="timezone"
@@ -435,22 +389,12 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
 
                   {edit && (
                     <div>
-                      <div className={'col-md-8 col-sm-12'}>
+                      <div className={'col-xs-12'}>
                         <RequestMoreCodesButton
                           hasActiveQrRequest={isActiveQrRequest}
                           isExpiredEvent={isExpiredEvent}
                           onClick={handleQrRequestModalClick}
                         />
-                      </div>
-                      <div className={'col-md-4 col-sm-12'}>
-                        <button
-                          type="button"
-                          className={'filter-base filter-button'}
-                          onClick={() => setIsQrGeneratorModalOpen(true)}
-                          style={{ width: '100%' }}
-                        >
-                          Generate QR
-                        </button>
                       </div>
                     </div>
                   )}
@@ -458,14 +402,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                     <div className={'col-xs-8'}>
                       <div className={'checkbox-field'} onClick={toggleActiveWebsite}>
                         <input type="checkbox" checked={activeWebsite} readOnly name="website" />
-                        <label>Active Website</label>
-                      </div>
-                    </div>
-
-                    <div className={'col-xs-4'}>
-                      <div className={'checkbox-field'} onClick={toggleActiveCaptcha}>
-                        <input type="checkbox" checked={activeCaptcha} readOnly name="captcha" />
-                        <label>Captcha Activated</label>
+                        <label>Active Secret</label>
                       </div>
                     </div>
                   </div>
@@ -535,4 +472,4 @@ const RequestMoreCodesButton: FC<RequestMoreCodesButtonProps> = ({ hasActiveQrRe
   );
 };
 
-export default WebsiteForm;
+export default SecretForm;

@@ -10,8 +10,8 @@ import {
   FormikActions,
   FormikHandlers,
   FormikProps,
-  isNaN
-} from "formik";
+  isNaN,
+} from 'formik';
 import DayPickerInput from 'react-day-picker/DayPickerInput';
 import 'react-day-picker/lib/style.css';
 import { format } from 'date-fns';
@@ -44,21 +44,22 @@ import { useAsync } from 'react-helpers';
 import { PoapEventSchema, PoapEventSchemaEdit, PoapQrRequestSchema } from 'lib/schemas';
 import { generateSecretCode } from 'lib/helpers';
 import {
-  Template,
-  PoapFullEvent,
-  PoapEvent,
+  createEvent,
+  getActiveRedeemRequests,
   getEventByFancyId,
   getEventById,
   getPaginatedEvents,
-  updateEvent,
-  createEvent,
   getTemplates,
-  postQrRequests,
-  getActiveQrRequests,
   PaginatedEvent,
-  SortDirection,
+  PoapEvent,
+  PoapFullEvent,
+  postRedeemRequests,
+  RedeemRequestType,
   SortCondition,
+  SortDirection,
+  updateEvent,
   EventFilter,
+  Template,
 } from '../api';
 import FormFilterReactSelect from 'components/FormFilterReactSelect';
 
@@ -87,7 +88,7 @@ type QrRequestModalProps = {
   setIsActiveQrRequest: (id: number) => void;
   eventId?: number;
   secretCode?: number;
-  isWebsitesRequest: boolean;
+  type: RedeemRequestType;
 };
 
 type QrRequestFormikValues = {
@@ -214,11 +215,10 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const dateFormatter = (day: Date | number) => format(day, 'yyyy-MM-dd');
   const dateToSubmitFormatter = (dateString: string) => {
     const date = new Date(dateString);
-    if(isNaN(date.getTime()))
-      return '';
+    if (isNaN(date.getTime())) return '';
 
     /* https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off */
-    const dateUTC = new Date( date.getTime() + Math.abs(date.getTimezoneOffset() * 60000));
+    const dateUTC = new Date(date.getTime() + Math.abs(date.getTimezoneOffset() * 60000));
     return format(dateUTC, 'MM-dd-yyyy');
   };
 
@@ -242,8 +242,8 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const isAdmin = authClient.isAuthenticated();
 
   const checkActiveQrRequest = async (id: number) => {
-    const { active } = await getActiveQrRequests(id);
-    if (active > 0) {
+    const active = await getActiveRedeemRequests(id, RedeemRequestType.qr_code);
+    if (active.length > 0) {
       setIsActiveQrRequest(true);
     } else {
       setIsActiveQrRequest(false);
@@ -525,7 +525,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                       eventId={event?.id}
                       handleModalClose={handleQrRequestModalRequestClose}
                       setIsActiveQrRequest={checkActiveQrRequest}
-                      isWebsitesRequest={false}
+                      type={RedeemRequestType.qr_code}
                     />
                   </ReactModal>
                 </>
@@ -584,9 +584,9 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   disabledDays={
                     values.end_date !== ''
                       ? {
-                        from: addDays(values.end_date, 1),
-                        to: veryFutureDate,
-                      }
+                          from: addDays(values.end_date, 1),
+                          to: veryFutureDate,
+                        }
                       : undefined
                   }
                 />
@@ -601,9 +601,9 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   disabledDays={
                     values.start_date !== ''
                       ? {
-                        from: veryOldDate,
-                        to: new Date(values.start_date),
-                      }
+                          from: veryOldDate,
+                          to: new Date(values.start_date),
+                        }
                       : undefined
                   }
                 />
@@ -619,19 +619,19 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   disabledDays={
                     values.end_date !== ''
                       ? [
-                        {
-                          from: veryOldDate,
-                          to: new Date(values.end_date),
-                        },
-                        {
-                          from: veryOldDate,
-                          to: new Date(),
-                        },
-                        {
-                          from: getMaxAllowExpiryDate(values.end_date),
-                          to: veryFutureDate,
-                        },
-                      ]
+                          {
+                            from: veryOldDate,
+                            to: new Date(values.end_date),
+                          },
+                          {
+                            from: veryOldDate,
+                            to: new Date(),
+                          },
+                          {
+                            from: getMaxAllowExpiryDate(values.end_date),
+                            to: veryFutureDate,
+                          },
+                        ]
                       : undefined
                   }
                 />
@@ -692,12 +692,12 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
 };
 
 export const QrRequestModal: React.FC<QrRequestModalProps> = ({
-                                                                eventId,
-                                                                secretCode,
-                                                                handleModalClose,
-                                                                setIsActiveQrRequest,
-                                                                isWebsitesRequest,
-                                                              }) => {
+  eventId,
+  secretCode,
+  handleModalClose,
+  setIsActiveQrRequest,
+  type,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
 
@@ -705,7 +705,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
     setIsSubmitting(true);
     const { requested_codes, secret_code } = values;
     if (eventId) {
-      await postQrRequests(eventId, requested_codes, secret_code, isWebsitesRequest)
+      await postRedeemRequests(eventId, requested_codes, secret_code, type)
         .then((_) => {
           setIsSubmitting(false);
           addToast('QR Request created correctly', {
@@ -786,16 +786,16 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
 };
 
 const DayPickerContainer = ({
-                              text,
-                              dayToSetup,
-                              handleDayClick,
-                              setFieldValue,
-                              placeholder,
-                              disabledDays,
-                              disabled,
-                              value,
-                              helpText,
-                            }: DatePickerContainerProps) => {
+  text,
+  dayToSetup,
+  handleDayClick,
+  setFieldValue,
+  placeholder,
+  disabledDays,
+  disabled,
+  value,
+  helpText,
+}: DatePickerContainerProps) => {
   const handleDayChange = (day: Date) => handleDayClick(day, dayToSetup, setFieldValue);
   let _value = value;
   if (value instanceof Date) {
@@ -836,15 +836,15 @@ const DayPickerContainer = ({
 };
 
 export const ImageContainer = ({
-                                 text,
-                                 handleFileChange,
-                                 setFieldValue,
-                                 errors,
-                                 shouldShowInfo = true,
-                                 disabled = false,
-                                 customLabel,
-                                 name,
-                               }: ImageContainerProps) => (
+  text,
+  handleFileChange,
+  setFieldValue,
+  errors,
+  shouldShowInfo = true,
+  disabled = false,
+  customLabel,
+  name,
+}: ImageContainerProps) => (
   <div className={classNames('date-picker-container', !shouldShowInfo && 'h78')}>
     {customLabel ? <span>{React.cloneElement(customLabel)}</span> : <label>{text}</label>}
     <input
@@ -915,14 +915,14 @@ export const EventList: React.FC = () => {
   const [limit, setLimit] = useState<number>(10);
   const [orderBy, setOrderBy] = useState<SortCondition>({
     sort_by: 'id',
-    sort_direction: SortDirection.descending
+    sort_direction: SortDirection.descending,
   });
 
   let delayedId: NodeJS.Timeout;
 
   const fetchEvents = useCallback(() => {
     const filter: EventFilter = {
-      name: criteria ? criteria : undefined
+      name: criteria ? criteria : undefined,
     };
 
     return getPaginatedEvents(filter, offset, limit, orderBy);
@@ -976,14 +976,15 @@ export const EventList: React.FC = () => {
 
       {hasErrorPaginatedEvents && <div>There was a problem fetching events</div>}
 
-      {paginatedEvent &&
-      <EventTable
-        events={paginatedEvent.items}
-        total={paginatedEvent.total}
-        limit={paginatedEvent.limit}
-        onChangePage={(page) => setOffset(page * paginatedEvent.limit)}
-        onChangeSort={setOrderBy}
-      />}
+      {paginatedEvent && (
+        <EventTable
+          events={paginatedEvent.items}
+          total={paginatedEvent.total}
+          limit={paginatedEvent.limit}
+          onChangePage={(page) => setOffset(page * paginatedEvent.limit)}
+          onChangeSort={setOrderBy}
+        />
+      )}
     </div>
   );
 };
@@ -992,7 +993,7 @@ const EventTable: React.FC<EventTableProps> = ({ events, total, onChangePage, on
   const [page, setPage] = useState<number>(0);
   const [orderBy, setOrderBy] = useState<SortCondition>({
     sort_by: 'id',
-    sort_direction: SortDirection.descending
+    sort_direction: SortDirection.descending,
   });
 
   useEffect(() => {
@@ -1012,74 +1013,94 @@ const EventTable: React.FC<EventTableProps> = ({ events, total, onChangePage, on
     let dir;
 
     if (orderBy.sort_by === field && orderBy.sort_direction === SortDirection.ascending) {
-      dir = SortDirection.descending
+      dir = SortDirection.descending;
     } else {
-      dir = SortDirection.ascending
+      dir = SortDirection.ascending;
     }
     const sortCond = {
       sort_by: field,
-      sort_direction: dir
+      sort_direction: dir,
     };
 
     setOrderBy(sortCond);
     onChangeSort(sortCond);
-  }
+  };
 
   return (
     <div>
       <div className={'admin-table transactions'}>
         <div className={'row table-header visible-md'}>
           <div className={'col-md-1 center pointer'} onClick={() => handleSort('id')}>
-            #{orderBy.sort_by === 'id' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            #
+            {orderBy.sort_by === 'id' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={`col-md-6 pointer`} onClick={() => handleSort('name')}>
             Name of the POAP
-            {orderBy.sort_by === 'name' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            {orderBy.sort_by === 'name' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={'col-md-2 center'} onClick={() => handleSort('start_date')}>
             Start Date
-            {orderBy.sort_by === 'start_date' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            {orderBy.sort_by === 'start_date' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={'col-md-2 center'}>Image</div>
           {isAdmin && <div className={'col-md-1 center'}>Edit</div>}
         </div>
         <div className={'admin-table-row'}>
-          {events && events.map((event, i) => (
-            <div className={`row ${i % 2 === 0 ? 'even' : 'odd'} relative`} key={event.id}>
-              <div className={'col-md-1 center'}>
-                <span className={'visible-sm visible-md'}>#</span>
-                {event.id}
+          {events &&
+            events.map((event, i) => (
+              <div className={`row ${i % 2 === 0 ? 'even' : 'odd'} relative`} key={event.id}>
+                <div className={'col-md-1 center'}>
+                  <span className={'visible-sm visible-md'}>#</span>
+                  {event.id}
+                </div>
+                <div className={`col-md-6 ellipsis`}>
+                  <span className={'visible-sm'}>
+                    Name of the POAP: <br />
+                  </span>
+                  <a href={event.event_url} title={event.name} target="_blank" rel="noopener noreferrer">
+                    {event.name}
+                  </a>
+                </div>
+                <div className={'col-md-2 center'}>
+                  <span className={'visible-sm'}>Start date: </span>
+                  <span>{event.start_date}</span>
+                </div>
+                <div className={'col-md-2 center '}>
+                  <Tooltip
+                    content={[
+                      <div key={''} className={'event-table-tooltip'}>
+                        <img alt={event.image_url} src={event.image_url} className={'tooltipped'} />
+                      </div>,
+                    ]}
+                  >
+                    <img alt={event.image_url} className={'logo-image'} src={event.image_url} />
+                  </Tooltip>
+                </div>
+                <div className={'col-md-1 center event-edit-icon-container'}>
+                  <Link to={`/admin/events/${event.fancy_id}`}>
+                    <EditIcon />
+                  </Link>
+                </div>
               </div>
-              <div className={`col-md-6 ellipsis`}>
-                <span className={'visible-sm'}>
-                  Name of the POAP: <br />
-                </span>
-                <a href={event.event_url} title={event.name} target="_blank" rel="noopener noreferrer">
-                  {event.name}
-                </a>
-              </div>
-              <div className={'col-md-2 center'}>
-                <span className={'visible-sm'}>Start date: </span>
-                <span>{event.start_date}</span>
-              </div>
-              <div className={'col-md-2 center '}>
-                <Tooltip
-                  content={[
-                    <div key={''} className={'event-table-tooltip'}>
-                      <img alt={event.image_url} src={event.image_url} className={'tooltipped'} />
-                    </div>,
-                  ]}
-                >
-                  <img alt={event.image_url} className={'logo-image'} src={event.image_url} />
-                </Tooltip>
-              </div>
-              <div className={'col-md-1 center event-edit-icon-container'}>
-                <Link to={`/admin/events/${event.fancy_id}`}>
-                  <EditIcon />
-                </Link>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
         <div className={'pagination'}>
           {total && total > limit && (

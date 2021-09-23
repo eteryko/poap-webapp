@@ -264,19 +264,31 @@ const DeliverySchema = yup.object().shape({
   event_ids: yup.array().of(yup.string().required('An event ID is required')).min(1).max(5),
 });
 
-const WebsiteBaseShape = {
-  claimName: yup
-    .string()
-    .required('A unique name is required')
-    .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Must be URL friendly. No spaces, only ASCII')
-    .max(100, 'The event name should be less than 100 characters'),
+const EventSecretShape = ({
   start_date: yup.string().required('from date is required'),
   start_time: yup.string().required('a start time is required'),
   end_date: yup.string().required('to date is required'),
   end_time: yup.string().required('an end time is required'),
   captcha: yup.boolean(),
-  active: yup.boolean(),
+  active: yup.boolean()
+});
+
+const WebsiteBaseShape = {
+  ...EventSecretShape,
+  claimName: yup
+    .string()
+    .required('A unique name is required')
+    .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Must be URL friendly. No spaces, only ASCII')
+    .max(100, 'The event name should be less than 100 characters'),
 };
+
+const WordBaseShape = {
+  ...EventSecretShape,
+  secretWord: yup
+    .string()
+    .required('A unique word is required')
+    .max(100, 'The event word should be less than 100 characters'),
+}
 
 const WebsiteSchemaWithActiveRequest = yup.object().shape({
   ...WebsiteBaseShape,
@@ -289,6 +301,24 @@ const WebsiteSchemaWithActiveRequest = yup.object().shape({
 
 const WebsiteSchemaWithoutActiveRequest = yup.object().shape({
   ...WebsiteBaseShape,
+  codesQuantity: yup
+    .number()
+    .required('A positive amount of codes is required')
+    .positive('the amount of requested codes must be greater than zero')
+    .integer('the amount of requested codes must be an integer'),
+});
+
+const WordSchemaWithActiveRequest = yup.object().shape({
+  ...WordBaseShape,
+  codesQuantity: yup
+    .number()
+    .required('the amount of requested codes must be greater or equals to zero')
+    .moreThan(-1, 'the amount of requested codes must be greater or equals to zero')
+    .integer('the amount of requested codes must be an integer'),
+});
+
+const WordSchemaWithoutActiveRequest = yup.object().shape({
+  ...WordBaseShape,
   codesQuantity: yup
     .number()
     .required('A positive amount of codes is required')
@@ -316,4 +346,6 @@ export {
   WebsiteSchemaWithActiveRequest,
   WebsiteSchemaWithoutActiveRequest,
   PoapQrRequestSchema,
+  WordSchemaWithActiveRequest,
+  WordSchemaWithoutActiveRequest,
 };
