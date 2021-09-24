@@ -1303,12 +1303,25 @@ table.backoffice-table {
         }
 
         @media (min-width: 1006px) {
-          & > div:not(.subcomponent-content), a, span {
+          & > a {
             display: inline-block;
+          }
+          & > div:not(.subcomponent-content), a, span {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 200px;
+          }
+        }
+
+        &.subcomponent {
+          max-width: none;
+          .no-max-width {
+            max-width: none;
+          }
+          .center {
+            display: block;
+            text-align: center;
           }
         }
 

@@ -1,4 +1,4 @@
-import React, { CSSProperties, FC, useEffect, useState } from 'react';
+import React, { CSSProperties, FC, HTMLAttributes, useEffect, useState } from 'react';
 
 /* Libraries */
 import ReactPaginate from 'react-paginate';
@@ -10,15 +10,17 @@ import { useToasts } from 'react-toast-notifications';
 import { Loading } from '../../components/Loading';
 import FilterSelect from '../../components/FilterSelect';
 import { SubmitButton } from '../../components/SubmitButton';
-import { Column, SortingRule, useExpanded, useSortBy, useTable } from 'react-table';
+import { Column, Row, SortingRule, useExpanded, useSortBy, useTable } from 'react-table';
 
 /* Helpers */
 import {
-  Delivery,
-  getDeliveries, getEventById,
-  PoapEvent, PoapFullEvent, rebuildDeliveries,
+  ExtendedDelivery,
+  getDeliveries,
+  PoapFullEvent,
+  rebuildDeliveries,
   SortCondition,
-  SortDirection, updateDeliveryStatus,
+  SortDirection,
+  updateDeliveryStatus,
 } from '../../api';
 import { format } from 'date-fns';
 import { timeSince } from '../../lib/helpers';
@@ -32,6 +34,7 @@ import error from '../../images/error.svg';
 import pending from '../../images/pending.svg';
 import { Tooltip } from 'react-lightweight-tooltip';
 import { ExpandedIcon, SortIcon } from '../RequestsComponents';
+import { Link } from 'react-router-dom';
 
 type PaginateAction = {
   selected: number;
@@ -46,7 +49,7 @@ type CreationModalProps = {
 };
 
 type CreationModalFormikValues = {
-  approved: string
+  approved: string;
 };
 
 const DeliveriesRequests: FC = () => {
@@ -56,7 +59,7 @@ const DeliveriesRequests: FC = () => {
   const [isFetchingDeliveries, setIsFetchingDeliveries] = useState<boolean>(false);
   const [approvedFilter, setApprovedFilter] = useState<string>('');
   const [isCreationModalOpen, setIsCreationModalOpen] = useState<boolean>(false);
-  const [_deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [_deliveries, setDeliveries] = useState<ExtendedDelivery[]>([]);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<undefined | number>(undefined);
   const [sortCondition, setSortCondition] = useState<undefined | SortCondition>(undefined);
   const [isRebuilding, setIsRebuilding] = useState<boolean>(false);
@@ -64,15 +67,21 @@ const DeliveriesRequests: FC = () => {
 
   useEffect(() => {
     fetchDeliveries().then();
-  }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    fetchDeliveries().then();
+    // Avoid multiple calls to get deliveries
+    if (_deliveries.length > 0) fetchDeliveries().then();
   }, [page]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   useEffect(() => {
-    setPage(0);
-    fetchDeliveries().then();
+    setPage((prevState) => {
+      if (prevState === 0) {
+        fetchDeliveries().then();
+      }
+      return 0;
+    });
   }, [approvedFilter, limit, sortCondition]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   useEffect(() => {
@@ -84,18 +93,51 @@ const DeliveriesRequests: FC = () => {
     }
   }, [isRebuilding]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
+  const extendDeliveries = async (extendedDeliveries: ExtendedDelivery[]) => {
+    await Promise.all(
+      extendedDeliveries.map(async (d) => {
+        await extendDelivery(d);
+      }),
+    );
+    setDeliveries(extendedDeliveries);
+  };
+
+  const extendDelivery = async (delivery: ExtendedDelivery) => {
+    // extend with email data
+    if (delivery.events && delivery.events.length > 0 && delivery.events[0].email) {
+      delivery.mail = delivery.events[0].email;
+    }
+
+    if (delivery.addresses_amount === 0 && delivery.total_addresses)
+      delivery.addresses_amount = delivery.total_addresses;
+  };
+
   const fetchDeliveries = async () => {
     setIsFetchingDeliveries(true);
 
     let event_id = undefined;
     let approved = undefined;
-    if (approvedFilter) approved = approvedFilter === 'approved' ? true : approvedFilter === 'rejected' ? false : null;
-
-    const response = await getDeliveries(limit, page * limit, event_id, approved, null, null);
+    let review = undefined;
+    switch (approvedFilter) {
+      case 'approved':
+        approved = true;
+        break;
+      case 'rejected':
+        approved = false;
+        break;
+      case 'pending':
+        review = false;
+        break;
+    }
+    const response = await getDeliveries(limit, page * limit, event_id, approved, null, review);
     const { deliveries, total } = response;
 
+    const extendedDeliveries: ExtendedDelivery[] = deliveries.map((d) => {
+      return { ...d, mail: '', addresses_amount: 0 };
+    });
+    await extendDeliveries(extendedDeliveries);
+
     setTotal(total);
-    setDeliveries(deliveries);
     setIsFetchingDeliveries(false);
   };
 
@@ -138,44 +180,63 @@ const DeliveriesRequests: FC = () => {
 
   const { addToast } = useToasts();
   const rebuildDeliveriesPage = async () => {
-    setIsRebuilding(true)
+    setIsRebuilding(true);
 
-    await rebuildDeliveries().then((_) => {
-      addToast(`poap.delivery rebuilt succesfully`, {
-        appearance: 'success',
-        autoDismiss: true,
+    await rebuildDeliveries()
+      .then((_) => {
+        addToast(`poap.delivery rebuilt successfully`, {
+          appearance: 'success',
+          autoDismiss: true,
+        });
+      })
+      .catch((e) => {
+        console.log(e);
+        addToast('poap.delivery failed to rebuild. \n' + e.message, {
+          appearance: 'error',
+          autoDismiss: false,
+        });
       });
-    }).catch((e) => {
-      console.log(e);
-      addToast('poap.delivery failed to rebuild. \n' + e.message, {
-        appearance: 'error',
-        autoDismiss: false,
-      });
-    });
 
-    setIsRebuilding(false)
-  }
+    setIsRebuilding(false);
+  };
 
   const getTableData = (): DeliveryTableData[] => {
     return _deliveries.map((delivery) => {
+      const { id, card_title, approved, reviewed_date, reviewed_by, mail, addresses_amount, image } = delivery;
+
+      let events: PoapFullEvent[] = [];
+      if (delivery.events) {
+        events = delivery.events;
+      }
       return {
-        id: delivery.id,
-        card_title: delivery.card_title,
-        event_ids: delivery.event_ids.split(',').map((e) => parseInt(e, 10)),
-        reviewed_date: delivery.approved && delivery.reviewed_date ? formatDate(new Date(delivery.reviewed_date).toDateString()) : '-',
-        reviewed_by: delivery.approved ? delivery.reviewed_by : '-',
-        approved: delivery.approved !== undefined ? delivery.approved : null,
+        id,
+        card_title,
+        events: events ? events : [],
+        reviewed_date: approved && reviewed_date ? formatDate(new Date(reviewed_date).toDateString()) : '-',
+        reviewed_by: approved && reviewed_by ? reviewed_by : '-',
+        main_event_id: events.length > 0 ? events[0].id : -1,
+        mail,
+        addresses_amount,
+        approved: approved !== undefined ? approved : null,
+        image,
       };
     });
   };
 
   return (
     <div className={'admin-table qr'}>
-      <div style={{display: 'flex'}}>
+      <div style={{ display: 'flex' }}>
         <h2>Manage Deliveries Requests</h2>
-        <SubmitButton className='small' style={{margin: '0 0 2rem auto', minWidth: 100}} canSubmit={!isRebuilding} isSubmitting={isRebuilding} text={'Rebuild'} onClick={() => {
-          rebuildDeliveriesPage()
-        }} />
+        <SubmitButton
+          className="small"
+          style={{ margin: '0 0 2rem auto', minWidth: 100 }}
+          canSubmit={!isRebuilding}
+          isSubmitting={isRebuilding}
+          text={'Rebuild'}
+          onClick={() => {
+            rebuildDeliveriesPage().then();
+          }}
+        />
       </div>
       <div className={'filters-container qr'}>
         <div className={'filter col-md-3 col-xs-6'}>
@@ -251,7 +312,12 @@ const DeliveriesRequests: FC = () => {
   );
 };
 
-const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliveryId, fetchDeliveries, rebuildDeliveriesPage }) => {
+const CreationModal: React.FC<CreationModalProps> = ({
+  handleModalClose,
+  deliveryId,
+  fetchDeliveries,
+  rebuildDeliveriesPage,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
 
@@ -262,10 +328,15 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
       await updateDeliveryStatus(deliveryId, approved === 'approved')
         .then((_) => {
           setIsSubmitting(false);
-          addToast(`Delivery ${approved === null ? 'set as pending' : approved === 'approved' ? 'approved' : 'rejected'} correctly`, {
-            appearance: 'success',
-            autoDismiss: true,
-          });
+          addToast(
+            `Delivery ${
+              approved === null ? 'set as pending' : approved === 'approved' ? 'approved' : 'rejected'
+            } correctly`,
+            {
+              appearance: 'success',
+              autoDismiss: true,
+            },
+          );
           fetchDeliveries();
           handleModalClose();
           rebuildDeliveriesPage();
@@ -286,7 +357,7 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
   return (
     <Formik
       initialValues={{
-        approved: ''
+        approved: '',
       }}
       validateOnBlur={false}
       validateOnChange={false}
@@ -316,12 +387,9 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
                   text="Cancel"
                   isSubmitting={false}
                   canSubmit={true}
-                  onClick={handleCreationModalClosing} />
-                <SubmitButton
-                  text="Accept"
-                  isSubmitting={isSubmitting}
-                  canSubmit={true}
-                  onClick={handleSubmit} />
+                  onClick={handleCreationModalClosing}
+                />
+                <SubmitButton text="Accept" isSubmitting={isSubmitting} canSubmit={true} onClick={handleSubmit} />
               </div>
             </div>
           </div>
@@ -333,7 +401,7 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, deliver
 
 type EditButtonProps = {
   id: number;
-  approved: boolean|null;
+  approved: boolean | null;
   onClick: (id: number) => void;
   style?: CSSProperties;
 };
@@ -347,24 +415,76 @@ const EditButton: React.FC<EditButtonProps> = ({ id, approved, onClick, style })
 };
 
 type ApprovedIconProps = {
-  approved: boolean|null;
+  approved: boolean | null;
 };
 
 const ApprovedIcon: React.FC<ApprovedIconProps> = ({ approved }) => {
-  return <Tooltip styles={{content: {position: 'absolute', top: 20, marginLeft: -35}, tooltip: {}, arrow: {display: 'none'}, wrapper: {}, gap: {}}} content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}><img src={approved === null || approved === undefined ? pending : approved ? checked : error} alt={approved === null || approved === undefined ? 'Delivery Pending' : approved ? `Delivery Reviewed` : 'Delivery not Reviewed'} className={'icon'} style={{cursor: 'default'}} /></Tooltip>;
+  return (
+    <Tooltip
+      styles={{
+        content: { position: 'absolute', top: 20, marginLeft: -35 },
+        tooltip: {},
+        arrow: { display: 'none' },
+        wrapper: {},
+        gap: {},
+      }}
+      content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}
+    >
+      <img
+        src={approved === null || approved === undefined ? pending : approved ? checked : error}
+        alt={
+          approved === null || approved === undefined
+            ? 'Delivery Pending'
+            : approved
+            ? `Delivery Reviewed`
+            : 'Delivery not Reviewed'
+        }
+        className={'icon'}
+        style={{ cursor: 'default' }}
+      />
+    </Tooltip>
+  );
 };
 
 const ApprovedIconMobile: React.FC<ApprovedIconProps> = ({ approved }) => {
-  return <Tooltip styles={{content: {position: 'absolute', top: 20, right: 0}, tooltip: {}, arrow: {display: 'none'}, wrapper: {}, gap: {}}} content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}><img src={approved === null || approved === undefined ? pending : approved ? checked : error} alt={approved === null || approved === undefined ? 'Delivery Pending' : approved ? `Delivery Reviewed` : 'Delivery not Reviewed'} className={'icon'} style={{cursor: 'default'}} /></Tooltip>;
+  return (
+    <Tooltip
+      styles={{
+        content: { position: 'absolute', top: 20, right: 0 },
+        tooltip: {},
+        arrow: { display: 'none' },
+        wrapper: {},
+        gap: {},
+      }}
+      content={approved === null || approved === undefined ? 'Pending' : approved ? 'Approved' : 'Rejected'}
+    >
+      <img
+        src={approved === null || approved === undefined ? pending : approved ? checked : error}
+        alt={
+          approved === null || approved === undefined
+            ? 'Delivery Pending'
+            : approved
+            ? `Delivery Reviewed`
+            : 'Delivery not Reviewed'
+        }
+        className={'icon'}
+        style={{ cursor: 'default' }}
+      />
+    </Tooltip>
+  );
 };
 
 interface DeliveryTableData {
+  events: PoapFullEvent[];
   id: number;
   card_title: string;
-  event_ids: number[];
-  reviewed_by?: string;
-  reviewed_date?: string;
-  approved: boolean|null;
+  reviewed_by: string;
+  reviewed_date: string;
+  main_event_id: number;
+  mail: string;
+  addresses_amount: number;
+  approved: boolean | null;
+  image: string;
 }
 
 type DeliveryTableProps = {
@@ -387,19 +507,38 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
         ),
         disableSortBy: true,
       },
-      { Header: '#', accessor: 'id', disableSortBy: true,
+      {
+        Header: 'Delivery ID',
+        accessor: 'id',
+        disableSortBy: true,
+        Cell: ({ value }) => <div className={'center'}>{value}</div>,
+      },
+      {
+        Header: 'Event ID',
+        accessor: 'main_event_id',
+        disableSortBy: true,
         Cell: ({ value }) => <div className={'center'}>{value}</div>,
       },
       {
         id: 'card_title',
         Header: 'Title',
         accessor: 'card_title',
-        Cell: ({ value }) => <div className={'left'}>{value}</div>,
+        Cell: ({ value }) => <div className={'ellipsis'}>{value}</div>,
       },
       {
-        id: 'reviewed_date',
-        Header: 'Reviewed Date',
-        accessor: 'reviewed_date',
+        Header: 'Mail',
+        accessor: 'mail',
+        disableSortBy: true,
+        Cell: ({ value }) => (
+          <div className={'expand-on-hover-md'} style={{ maxWidth: 'none' }}>
+            {!value || value === '' ? '-' : value}
+          </div>
+        ),
+      },
+      {
+        Header: 'Addresses amount',
+        accessor: 'addresses_amount',
+        disableSortBy: true,
         Cell: ({ value }) => <div className={'center'}>{value}</div>,
       },
       {
@@ -448,17 +587,61 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
+  const RowContent: React.FC<{ row: Row<DeliveryTableData> }> = ({ row }) => {
+    const RowDiv: React.FC<{ style?: HTMLAttributes<any>['style'] }> = ({ children, style }) => {
+      return (
+        <div className="center no-max-width" style={style}>
+          {children}
+        </div>
+      );
+    };
+    return (
+      <>
+        <RowDiv>
+          <img src={row.original.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery'} />
+          <div className="no-max-width">Reviewed date: {row.original.reviewed_date}</div>
+          <div className="no-max-width">Reviewed by: {row.original.reviewed_by}</div>
+        </RowDiv>
+        <RowDiv
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(1, 1fr)',
+            border: '3px solid lightgrey',
+            padding: 15,
+          }}
+        >
+          {row.original.events.map((event, i) => (
+            <div className="no-max-width" key={i + 'subcomponentDiv' + event.id}>
+              <EventSubComponent key={i + 'subcomponent' + event.id} event={event} />
+              {i !== row.original.events.length - 1 && <hr key={i + 'subcomponentHr' + event.id} />}
+            </div>
+          ))}
+        </RowDiv>
+      </>
+    );
+  };
+
   return (
     <table className={'backoffice-table fluid'} {...getTableProps()}>
       <thead>
         {headerGroups.map((headerGroup, i) => (
           <tr key={i} {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column, j) => (
-              <th key={j} {...column.getHeaderProps([column.getSortByToggleProps()])}>
-                {column.render('Header')}
-                {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
-              </th>
-            ))}
+            {headerGroup.headers.map((column, columnIndex) => {
+              const style =
+                columnIndex === 5
+                  ? { width: '160px' }
+                  : columnIndex === 1 || columnIndex === 2
+                  ? { width: '100px' }
+                  : columnIndex === 0
+                  ? { width: '30px' }
+                  : {};
+              return (
+                <th key={columnIndex} {...column.getHeaderProps([column.getSortByToggleProps()])} style={style}>
+                  {column.render('Header')}
+                  {column.isSorted ? <SortIcon isSortedDesc={column.isSortedDesc} /> : null}
+                </th>
+              );
+            })}
           </tr>
         ))}
       </thead>
@@ -480,15 +663,7 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
                 {row.isExpanded ? (
                   <tr key={i + 'expanded'}>
                     <td className={'subcomponent'} key={i + 'subcomponent'} colSpan={visibleColumns.length}>
-                      {
-                        row.original.event_ids.map((id, i) => (
-                          <div key={i + 'subcomponentDiv' + id}>
-                            <EventSubComponent key={i + 'subcomponent' + id} eventId={id}
-                                                    reviewed_by={row.original.reviewed_by} />
-                            {i !== row.original.event_ids.length-1 && <hr key={i + 'subcomponentHr' + id}/>}
-                          </div>
-                        ))
-                      }
+                      <RowContent row={row} />
                     </td>
                   </tr>
                 ) : null}
@@ -508,34 +683,38 @@ const DeliveryTable: React.FC<DeliveryTableProps> = ({ data, onEdit, onSortChang
 };
 
 type EventSubComponentProps = {
-  eventId: number;
-  reviewed_by: string | undefined;
+  event: PoapFullEvent;
 };
 
-const EventSubComponent: React.FC<EventSubComponentProps> = ({ eventId, reviewed_by }) => {
-  const dateFormatter = (dateString: string) => format(new Date(dateString), 'dd-MMM-yyyy');
-  const [event, setEvent] = useState<PoapEvent|PoapFullEvent|null>(null)
+const dateFormatter = (dateString: string) => format(new Date(dateString), 'dd-MMM-yyyy');
 
-  useEffect(() => {
-    async function getEvent() {
-      const event = await getEventById(eventId)
-      if (event) setEvent(event)
-    }
-    getEvent().then()
-  }, [eventId])
+const EventSubComponent: React.FC<EventSubComponentProps> = ({ event }) => {
+  const Line: React.FC = ({ children }) => {
+    return (
+      <div style={{ width: '70%' }} className="no-max-width">
+        {children}
+      </div>
+    );
+  };
 
-  return (
-    event ?
-    <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }} className={'subcomponent'}>
+  return event ? (
+    <div
+      style={{ textAlign: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column' }}
+      className={'subcomponent no-max-width'}
+    >
       <h4 style={{ fontWeight: 500 }}>
-        from {dateFormatter(event.start_date)} to {dateFormatter(event.end_date)} expires{' '}
-        {dateFormatter(event.expiry_date)}
+        {`Event date: ${dateFormatter(event.start_date)} - ${dateFormatter(event.end_date)}`}
       </h4>
-      <img src={event.image_url} style={{ maxWidth: '100px', paddingBottom: '5px' }} alt={'event'} />
-      <div className={'ellipsis'} style={{ width: '70%' }}>{event.description}</div>
-      <div style={{ textAlign: 'center' }}>Reviewed by: {reviewed_by}</div>
-    </div> : null
-  );
+      <h4 style={{ fontWeight: 500 }}>{`Expiry date: ${dateFormatter(event.expiry_date)}`}</h4>
+      <Line>
+        Event ID:{' '}
+        <Link target="_blank" to={`/admin/events/${event.fancy_id}`}>
+          {event.id}
+        </Link>
+      </Line>
+      <Line>Requester email: {!event.email || event.email === '' ? 'No registered email' : event.email}</Line>
+    </div>
+  ) : null;
 };
 
 const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loading }) => {
@@ -548,14 +727,20 @@ const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loadi
           <tr key={i}>
             <td className={'wrap'}>
               <div>
-                <span>#{delivery.id}</span>
+                <b>Id:</b> {delivery.id}
                 <EditButton id={delivery.id} approved={delivery.approved} onClick={onEdit} style={{ float: 'right' }} />
               </div>
               <div>
-                <b>Card title:</b> {delivery.card_title}
+                <b>Title:</b> {delivery.card_title}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <b>Status: </b> <ApprovedIconMobile approved={delivery.approved} />
               </div>
               <div>
-                <b>Approved: </b> <ApprovedIconMobile approved={delivery.approved} />
+                <b>Email: </b> {!delivery.mail || delivery.mail === '' ? 'No registered email' : delivery.mail}
+              </div>
+              <div>
+                <b>Addresses amount: </b> {delivery.addresses_amount}
               </div>
               {delivery.approved ? (
                 <>
@@ -567,6 +752,22 @@ const DeliveryTableMobile: React.FC<DeliveryTableProps> = ({ data, onEdit, loadi
                   </div>
                 </>
               ) : null}
+              <img src={delivery.image} style={{ maxWidth: '100px', paddingBottom: '10px' }} alt={'Delivery'} />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(1, 1fr)',
+                  border: '3px solid lightgrey',
+                  padding: 15,
+                }}
+              >
+                {delivery.events.map((event, i) => (
+                  <div key={i + 'subcomponentDiv' + event.id}>
+                    <EventSubComponent key={i + 'subcomponent' + event.id} event={event} />
+                    {i !== delivery.events.length - 1 && <hr key={i + 'subcomponentHr' + event.id} />}
+                  </div>
+                ))}
+              </div>
             </td>
           </tr>
         ))}

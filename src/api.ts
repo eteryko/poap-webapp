@@ -1035,7 +1035,7 @@ export function getQueueMessage(messageId: string): Promise<Queue> {
 }
 
 /* Deliveries */
-export type Delivery = {
+export interface Delivery {
   id: number;
   slug: string;
   card_title: string;
@@ -1051,7 +1051,14 @@ export type Delivery = {
   approved?: boolean | null;
   reviewed_by?: string;
   reviewed_date?: Date;
-};
+  events?: PoapFullEvent[];
+  total_addresses?: number;
+}
+
+export interface ExtendedDelivery extends Delivery {
+  mail: string;
+  addresses_amount: number;
+}
 
 export type DeliveryAddress = {
   address: string;
