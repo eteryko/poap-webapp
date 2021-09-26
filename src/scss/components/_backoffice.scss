@@ -1367,11 +1367,15 @@ table.backoffice-table {
 }
 
 .auth-modal-container {
+  position: relative;
+  padding-top: 40px;
+
   .close {
     position: absolute;
     width: 20px;
     z-index: 1;
     right: 0;
+    top: 0;
     background: none;
     border: none;
     cursor: pointer;
@@ -1381,8 +1385,25 @@ table.backoffice-table {
     }
   }
 
-  .filter-by {
-    margin-top: 25px;
+  .filter-by, input {
+    border: 1px solid #eef0fb;
+  }
+
+  .filter-by:hover {
+    border: 2px solid $color-primary;
+  }
+
+  .error {
+    display: flex;
+    justify-content: center;
+    color: $color-error;
+    margin-bottom: 20px;
+  }
+
+  .bk-form-row {
+    label {
+      padding-left: 12px;
+    }
   }
 }
 

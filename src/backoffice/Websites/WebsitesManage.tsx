@@ -4,10 +4,10 @@ import { authClient } from '../../auth';
 import ReactModal from 'react-modal';
 import WebsiteForm from './WebsiteForm';
 import WebsitesList from './WebsitesList';
-import { EventSecretCodeForm } from './EventSecretCodeForm';
 import { parse } from 'date-fns';
 import { useHistory } from 'react-router-dom';
 import { ROUTES } from '../../lib/constants';
+import { EventSecretCodeForm } from './EventSecretCodeForm';
 
 const WebsitesManage: FC = () => {
   const [isAuthenticationModalOpen, setIsAuthenticationModalOpen] = useState<boolean>(true);
@@ -25,7 +25,6 @@ const WebsitesManage: FC = () => {
       setIsAuthenticationModalOpen(false);
     }
   }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
-
 
   const handleAuthenticationSubmit = async (eventId: number, secretCode?: number): Promise<void> => {
     setIsLoadingAuth(true);

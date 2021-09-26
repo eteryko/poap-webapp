@@ -1,13 +1,13 @@
 import React, { FC, useEffect, useState } from 'react';
-import { getEventById, getEvents, PoapEvent, validateEventAndSecretCode } from '../../api';
+import { getEventById, PoapEvent, validateEventAndSecretCode } from '../../api';
 import { authClient } from '../../auth';
 import ReactModal from 'react-modal';
 import SecretForm from './SecretForm';
 import SecretList from './SecretList';
-import { EventSecretCodeForm } from './EventSecretCodeForm';
 import { parse } from 'date-fns';
 import { useHistory } from 'react-router-dom';
 import { ROUTES } from '../../lib/constants';
+import { EventSecretCodeForm } from '../Websites/EventSecretCodeForm';
 
 const SecretsManage: FC = () => {
   const [isAuthenticationModalOpen, setIsAuthenticationModalOpen] = useState<boolean>(true);
@@ -16,7 +16,6 @@ const SecretsManage: FC = () => {
   const [eventId, setEventId] = useState<number | undefined>(undefined);
   const [event, setEvent] = useState<PoapEvent | undefined>(undefined);
   const [secretCode, setSecretCode] = useState<number | undefined>(undefined);
-  const [events, setEvents] = useState<PoapEvent[]>([]);
   const history = useHistory();
 
   const isAdmin = authClient.isAuthenticated();
@@ -24,17 +23,8 @@ const SecretsManage: FC = () => {
   useEffect(() => {
     if (isAdmin) {
       setIsAuthenticationModalOpen(false);
-    } else {
-      fetchEvents().then();
     }
   }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
-
-  const fetchEvents = async (): Promise<void> => {
-    setIsLoadingAuth(true);
-    const _events = await getEvents(false);
-    setEvents(_events);
-    setIsLoadingAuth(false);
-  };
 
   const handleAuthenticationSubmit = async (eventId: number, secretCode?: number): Promise<void> => {
     setIsLoadingAuth(true);
@@ -77,7 +67,7 @@ const SecretsManage: FC = () => {
     }
   };
 
-  const handleWebsitesListCreateNewOrEdit = (event: PoapEvent): void => {
+  const handleSecretsListCreateNewOrEdit = (event: PoapEvent): void => {
     setEvent(event);
     setEventId(event.id);
   };
@@ -95,7 +85,6 @@ const SecretsManage: FC = () => {
           error={authError}
           onSubmit={handleAuthenticationSubmit}
           loading={isLoadingAuth}
-          events={events}
           askSecretCode={true}
           onClose={() => {
             history.push(ROUTES.admin);
@@ -104,7 +93,7 @@ const SecretsManage: FC = () => {
       </ReactModal>
       {/*End Modals*/}
       {isAdmin && !eventId && (
-        <SecretList onCreateNew={handleWebsitesListCreateNewOrEdit} onEdit={handleWebsitesListCreateNewOrEdit} />
+        <SecretList onCreateNew={handleSecretsListCreateNewOrEdit} onEdit={handleSecretsListCreateNewOrEdit} />
       )}
       {eventId && <SecretForm eventId={eventId} secretCode={secretCode} maybeEvent={event} />}
     </div>

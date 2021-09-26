@@ -225,8 +225,7 @@ const UpdateModalWithFormikRangeSchema = yup.object().shape({
 
 const UpdateModalWithFormikListSchema = yup.object().shape({
   hashesList: yup.string().required(),
-  event: yup
-    .object().required(),
+  event: yup.object().required(),
 });
 
 const UpdateModalWithFormikSelectedQrsSchema = yup.object().shape({});
@@ -256,22 +255,37 @@ const DeliverySchema = yup.object().shape({
   card_text: yup.string().required('Card text is required'),
   page_title: yup.string().required('Page title is required').max(200, 'Page title must be less than 200 characters'),
   page_text: yup.string().required('Page text is required'),
-  metadata_title: yup.string().required('Metadata title text is required').max(200, 'Metadata title must be less than 200 characters'),
-  metadata_description: yup.string().required('Metadata description is required').max(200, 'Metadata description must be less than 200 characters'),
+  metadata_title: yup
+    .string()
+    .required('Metadata title text is required')
+    .max(200, 'Metadata title must be less than 200 characters'),
+  metadata_description: yup
+    .string()
+    .required('Metadata description is required')
+    .max(200, 'Metadata description must be less than 200 characters'),
   image: yup.string().required('An image URL is required'),
   page_title_image: yup.string(),
-  edit_codes: yup.array().of(yup.string().required('An edit code is required').matches(/^[0-9]{6}$/, 'Edit code must be six digits, only numbers')).min(1).max(5),
+  edit_codes: yup
+    .array()
+    .of(
+      yup
+        .string()
+        .required('An edit code is required')
+        .matches(/^[0-9]{6}$/, 'Edit code must be six digits, only numbers'),
+    )
+    .min(1)
+    .max(5),
   event_ids: yup.array().of(yup.string().required('An event ID is required')).min(1).max(5),
 });
 
-const EventSecretShape = ({
+const EventSecretShape = {
   start_date: yup.string().required('from date is required'),
   start_time: yup.string().required('a start time is required'),
   end_date: yup.string().required('to date is required'),
   end_time: yup.string().required('an end time is required'),
   captcha: yup.boolean(),
-  active: yup.boolean()
-});
+  active: yup.boolean(),
+};
 
 const WebsiteBaseShape = {
   ...EventSecretShape,
@@ -288,7 +302,7 @@ const WordBaseShape = {
     .string()
     .required('A unique word is required')
     .max(100, 'The event word should be less than 100 characters'),
-}
+};
 
 const WebsiteSchemaWithActiveRequest = yup.object().shape({
   ...WebsiteBaseShape,
@@ -326,6 +340,24 @@ const WordSchemaWithoutActiveRequest = yup.object().shape({
     .integer('the amount of requested codes must be an integer'),
 });
 
+const SecretsAuthModalBaseShape = {
+  eventId: yup.number().required('Event is required'),
+};
+
+const SecretsAuthAdminSchema = yup.object().shape({
+  ...SecretsAuthModalBaseShape,
+});
+
+const SecretsAuthWithSecretCodeSchema = yup.object().shape({
+  ...SecretsAuthModalBaseShape,
+  secretCode: yup
+    .number()
+    .required('Edit Code is required')
+    .lessThan(1000000, 'Invalid Edit Code')
+    .integer('Invalid Edit Code')
+    .min(0, 'Invalid Edit COde'),
+});
+
 export {
   AddressSchema,
   GasPriceSchema,
@@ -348,4 +380,6 @@ export {
   PoapQrRequestSchema,
   WordSchemaWithActiveRequest,
   WordSchemaWithoutActiveRequest,
+  SecretsAuthWithSecretCodeSchema,
+  SecretsAuthAdminSchema,
 };

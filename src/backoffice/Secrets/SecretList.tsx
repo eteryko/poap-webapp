@@ -1,30 +1,29 @@
-import React, { FC, useEffect, useState } from "react";
-import { useToasts } from "react-toast-notifications";
+import React, { FC, useEffect, useState } from 'react';
+import { useToasts } from 'react-toast-notifications';
 
 /* Helpers */
 import {
   EventSecretType,
   getEventById,
-  getEvents,
   getSecretByEventIdAndSecretCode,
   getSecrets,
   PoapEvent,
-  Secret
-} from "../../api";
+  Secret,
+} from '../../api';
 
 /* Components */
-import { Loading } from "../../components/Loading";
-import FilterButton from "../../components/FilterButton";
-import FilterSelect from "../../components/FilterSelect";
-import ReactPaginate from "react-paginate";
-import ReactModal from "react-modal";
+import { Loading } from '../../components/Loading';
+import FilterButton from '../../components/FilterButton';
+import FilterSelect from '../../components/FilterSelect';
+import ReactPaginate from 'react-paginate';
+import ReactModal from 'react-modal';
 
 /* Assets */
-import { ReactComponent as EditIcon } from "../../images/edit.svg";
-import checked from "../../images/checked.svg";
-import error from "../../images/error.svg";
-import { format, parse } from "date-fns";
-import { EventSecretCodeForm } from "./EventSecretCodeForm";
+import { ReactComponent as EditIcon } from '../../images/edit.svg';
+import checked from '../../images/checked.svg';
+import error from '../../images/error.svg';
+import { format, parse } from 'date-fns';
+import { EventSecretCodeForm } from '../Websites/EventSecretCodeForm';
 
 /* Types */
 type PaginateAction = {
@@ -48,14 +47,8 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
   const [isEventIdModalOpen, setIsEventIdModalOpen] = useState<boolean>(false);
   const [isFetchingEvent, setIsFetchingEvent] = useState<boolean>(false);
   const [eventIdModalError, setEventIdModalError] = useState<string | undefined>(undefined);
-  const [events, setEvents] = useState<PoapEvent[]>([]);
 
   const { addToast } = useToasts();
-
-  /* Effects */
-  useEffect(() => {
-    fetchEvents().then();
-  }, []);
 
   useEffect(() => {
     if (secrets.length > 0) fetchSecrets().then();
@@ -83,13 +76,6 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
     } finally {
       setIsFetching(false);
     }
-  };
-
-  const fetchEvents = async (): Promise<void> => {
-    setIsFetchingEvent(true);
-    const _events = await getEvents(false);
-    setEvents(_events);
-    setIsFetchingEvent(false);
   };
 
   /* UI Handlers */
@@ -156,13 +142,12 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
 
   const tableHeaders = (
     <div className={'row table-header visible-md'}>
-      <div className={'col-md-4 col-xs-3 '}>ClaimName</div>
-      <div className={'col-md-2 col-xs-2 '}>Start Date</div>
-      <div className={'col-md-2 col-xs-2 '}>End Date</div>
-      <div className={'col-md-1 col-xs-2 '}>Claim/Total</div>
-      <div className={'col-md-1 col-xs-1 visible-md center'}>Captcha</div>
-      <div className={'col-md-1 col-xs-1 center'}>Active</div>
-      <div className={'col-md-1 col-xs-1'} />
+      <div className={'col-xs-3 '}>ClaimName</div>
+      <div className={'col-xs-2 '}>Start Date</div>
+      <div className={'col-xs-2 '}>End Date</div>
+      <div className={'col-xs-3 center'}>Claim/Total</div>
+      <div className={'col-xs-1 center'}>Active</div>
+      <div className={'col-xs-1'} />
     </div>
   );
 
@@ -181,7 +166,6 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
       >
         <EventSecretCodeForm
           onSubmit={handleEventIdModalSubmit}
-          events={events}
           error={eventIdModalError}
           loading={isFetchingEvent}
           onClose={() => {
@@ -247,7 +231,7 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
             {secrets.map((secret, i) => {
               return (
                 <div className={`row ${i % 2 === 0 ? 'even' : 'odd'}`} key={i}>
-                  <div className={'col-md-4 col-xs-12 ellipsis'}>
+                  <div className={'col-md-3 col-xs-12 ellipsis'}>
                     <span className={'visible-sm'}>Claim Name: </span>
                     {secret.claim_name}
                   </div>
@@ -262,18 +246,9 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
                     {secret.to ? format(new Date(secret.to), 'MM-dd-yyyy HH:MM') : '-'}
                   </div>
 
-                  <div className={'col-md-1 col-xs-12 ellipsis center'}>
+                  <div className={'col-md-3 col-xs-12 ellipsis center'}>
                     <span className={'visible-sm'}>Claimed / Total: </span>
                     {secret.deliveriesCount ? secret.deliveriesCount.claimed + '/' + secret.deliveriesCount.total : '-'}
-                  </div>
-
-                  <div className={'col-md-1 visible-md center status'}>
-                    <span className={'visible-sm'}>Captcha: </span>
-                    <img
-                      src={secret.captcha ? checked : error}
-                      alt={secret.captcha ? 'Active' : 'Inactive'}
-                      className={'status-icon'}
-                    />
                   </div>
 
                   <div className={'col-md-1 col-xs-12 center status'}>
