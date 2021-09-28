@@ -23,15 +23,12 @@ import { EventField, QrRequestModal } from '../EventsPage';
 import { Loading } from '../../components/Loading';
 import DatePicker, { DatePickerDay, SetFieldValue } from '../../components/DatePicker';
 import { format, isAfter, parse } from 'date-fns';
-import FormFilterReactSelect from '../../components/FormFilterReactSelect';
-import { timezones } from '../Checkouts/_helpers/Timezones';
 import ReactModal from 'react-modal';
 import { Tooltip } from 'react-lightweight-tooltip';
 
 /* Types */
 type WebsiteFormType = {
   secretWord: string;
-  timezone: number;
   start_date: string;
   start_time: string;
   end_date: string;
@@ -48,7 +45,7 @@ type WebsiteFormProps = {
 
 const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) => {
   /* State */
-  const [website, _setWebsite] = useState<Secret | null>(null);
+  const [secret, _setSecret] = useState<Secret | null>(null);
   const [activeWebsite, setActiveWebsite] = useState<boolean>(true);
   const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
   const [isActiveQrRequest, setIsActiveQrRequest] = useState<boolean>(false);
@@ -58,12 +55,6 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
   const isExpiredEvent = useMemo((): boolean => {
     return !!event && isAfter(new Date(), parse(event.expiry_date, 'dd-mmm-yy', new Date()));
   }, [event]);
-
-  const parseDate = (date: string, time: string, timezone: number): Date => {
-    const timezoneString = ('00' + Math.abs(timezone)).slice(-2) + '00';
-    const dateString = `${date}T${time}${timezone >= 0 ? `+${timezoneString}` : `-${timezoneString}`}`;
-    return new Date(dateString);
-  };
 
   const formatDate = (date: Date): string => {
     return format(date, 'yyyy-MM-dd');
@@ -75,7 +66,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
 
   const setWebsite = (website?: Secret): void => {
     if (website) {
-      _setWebsite(website);
+      _setSecret(website);
       setActiveWebsite(website.active);
       setEdit(true);
     } else {
@@ -89,30 +80,28 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
       active: true,
       start_date: '',
       start_time: '',
-      timezone: 0,
       end_date: '',
       end_time: '',
       codesQuantity: 0,
     };
 
-    if (website) {
-      const tzDelta = (website.timezone * 60 + new Date().getTimezoneOffset()) * 60000;
-      const from = new Date(new Date(website.from).getTime() + tzDelta);
-      const to = new Date(new Date(website.to).getTime() + tzDelta);
+    if (secret) {
+      const tzDelta = new Date().getTimezoneOffset() * 60000;
+      const from = new Date(new Date(secret.from).getTime() + tzDelta);
+      const to = new Date(new Date(secret.to).getTime() + tzDelta);
 
       values = {
-        secretWord: website.claim_name,
-        timezone: website.timezone,
+        secretWord: secret.claim_name,
         start_date: formatDate(from),
         start_time: formatTime(from),
         end_date: formatDate(to),
         end_time: formatTime(to),
-        active: website.active,
+        active: secret.active,
         codesQuantity: 1,
       };
     }
     return values;
-  }, [website]); /* eslint-disable-line react-hooks/exhaustive-deps */
+  }, [secret]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   /* Libraries */
   const { addToast } = useToasts();
@@ -168,7 +157,7 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
   const toggleActiveWebsite = () => setActiveWebsite(!activeWebsite);
 
   // Edition Loading Component
-  if (edit && !website) {
+  if (edit && !secret) {
     return (
       <div className={'bk-container'}>
         <h2>Edit Website</h2>
@@ -180,10 +169,13 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
   //Submit form
   const onSubmit = async (submittedValues: WebsiteFormType, actions: FormikActions<WebsiteFormType>) => {
     try {
-      const { secretWord, start_date, start_time, end_date, end_time, timezone, codesQuantity } = submittedValues;
+      const { secretWord, start_date, start_time, end_date, end_time, codesQuantity } = submittedValues;
 
-      const startDateTime: Date = parseDate(start_date, start_time, timezone);
-      const endDateTime: Date = parseDate(end_date, end_time, timezone);
+      const timezoneOffset = new Date().getTimezoneOffset() * 60000;
+      const start = parse(`${start_date} ${start_time}`, 'yyyy-MM-dd HH:mm', new Date()).getTime() - timezoneOffset;
+      const startDateTime: Date = new Date(start);
+      const end = parse(`${end_date} ${end_time}`, 'yyyy-MM-dd HH:mm', new Date()).getTime() - timezoneOffset;
+      const endDateTime: Date = new Date(end);
 
       if (startDateTime && endDateTime && isAfter(startDateTime, endDateTime)) {
         addToast('Start date & time should be before End date & time', {
@@ -200,7 +192,6 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             eventId,
             secretWord,
             codesQuantity,
-            timezone,
             EventSecretType.word,
             startDateTime.toISOString(),
             endDateTime.toISOString(),
@@ -223,7 +214,6 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             secretWord,
             startDateTime.toISOString(),
             endDateTime.toISOString(),
-            timezone,
             EventSecretType.word,
             false,
             activeWebsite,
@@ -306,9 +296,6 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
             onSubmit={onSubmit}
           >
             {({ values, errors, isSubmitting, setFieldValue }) => {
-              const handleSelectChange = (name: string) => (selectedOption: any) =>
-                setFieldValue(name, selectedOption.value);
-
               let startDateLimit =
                 values.end_date !== ''
                   ? {
@@ -334,48 +321,36 @@ const SecretForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) =
                       <EventField title="Secret Name" name="secretWord" />
                     </div>
                   </div>
-                  <div className={'date-row'}>
-                    <div className={'col-xs-12 col-md-4'}>
-                      <DatePicker
-                        text="Start Date"
-                        dayToSetup="start_date"
-                        handleDayClick={handleDayClick}
-                        setFieldValue={setFieldValue}
-                        placeholder={values.start_date}
-                        value={values.start_date}
-                        disabled={false}
-                        disabledDays={startDateLimit}
-                      />
-                      <EventField disabled={false} title="" name="start_time" type="time" />
+                  <div className={'row'}>
+                    <div className={'col-xs-12 col-md-6'}>
+                      <div className="datetime-container">
+                        <DatePicker
+                          text="Start Date (UTC)"
+                          dayToSetup="start_date"
+                          handleDayClick={handleDayClick}
+                          setFieldValue={setFieldValue}
+                          placeholder={values.start_date}
+                          value={values.start_date}
+                          disabled={false}
+                          disabledDays={startDateLimit}
+                        />
+                        <EventField disabled={false} title="" name="start_time" type="time" />
+                      </div>
                     </div>
-                    <div className={'col-xs-12  col-md-4'}>
-                      <DatePicker
-                        text="End Date"
-                        dayToSetup="end_date"
-                        handleDayClick={handleDayClick}
-                        setFieldValue={setFieldValue}
-                        placeholder={values.end_date}
-                        value={values.end_date}
-                        disabled={false}
-                        disabledDays={endDateLimit}
-                      />
-                      <EventField disabled={false} title="" name="end_time" type="time" />
-                    </div>
-                    <div
-                      className={'col-xs-12 col-md-4'}
-                      style={{
-                        paddingBottom: '5px',
-                      }}
-                    >
-                      <FormFilterReactSelect
-                        label="Timezone"
-                        name="timezone"
-                        placeholder={''}
-                        onChange={handleSelectChange('timezone')}
-                        options={timezones}
-                        disabled={false}
-                        value={timezones?.find((option) => option.value === values['timezone'])}
-                      />
+                    <div className={'col-xs-12 col-md-6'}>
+                      <div className="datetime-container">
+                        <DatePicker
+                          text="End Date (UTC)"
+                          dayToSetup="end_date"
+                          handleDayClick={handleDayClick}
+                          setFieldValue={setFieldValue}
+                          placeholder={values.end_date}
+                          value={values.end_date}
+                          disabled={false}
+                          disabledDays={endDateLimit}
+                        />
+                        <EventField disabled={false} title="" name="end_time" type="time" />
+                      </div>
                     </div>
                   </div>
 

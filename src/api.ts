@@ -1324,7 +1324,6 @@ export async function createSecret(
   event_id: number,
   claim_name: string,
   requested_codes: number,
-  timezone: number,
   secret_type: EventSecretType,
   from?: string,
   to?: string,
@@ -1337,12 +1336,12 @@ export async function createSecret(
     secret_code,
     claim_name,
     requested_codes,
-    timezone,
     from,
     to,
     secret_type,
     captcha,
     active,
+    timezone: 0,
   });
 
   const payload: RequestInit = {
@@ -1361,7 +1360,6 @@ export async function updateSecret(
   claim_name: string,
   from: string,
   to: string,
-  timezone: number,
   secret_type: EventSecretType,
   captcha?: boolean,
   active?: boolean,
@@ -1370,13 +1368,13 @@ export async function updateSecret(
   const body = JSON.stringify({
     event_id,
     claim_name,
-    timezone,
     from,
     to,
     secret_type,
     captcha,
     active,
     secret_code,
+    timezone: 0,
     qr_requests_requested_codes_check: false,
   });
 

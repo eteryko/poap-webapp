@@ -1160,20 +1160,31 @@
     font-size: 1.5rem;
   }
 
-  .col-xs-6 {
-    &:first-of-type {
-      padding-right: 10px;
-    }
-
-    &:not(:first-of-type) {
-      padding-left: 10px;
-    }
-  }
-
   .warning-text {
     text-align: center;
     color: $color-primary;
     max-width: 90%;
+  }
+
+  div[class^="col-"] {
+    padding: 5px;
+
+    .datetime-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: flex-end;
+
+      .bk-form-row {
+        padding-left: 5px;
+        margin-bottom: 0;
+        margin-top: 0;
+      }
+
+      input {
+        margin-bottom: 0;
+      }
+    }
   }
 
   .date-row {

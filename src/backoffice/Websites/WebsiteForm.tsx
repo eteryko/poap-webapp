@@ -25,8 +25,6 @@ import { EventField, QrRequestModal } from '../EventsPage';
 import { Loading } from '../../components/Loading';
 import DatePicker, { DatePickerDay, SetFieldValue } from '../../components/DatePicker';
 import { format, isAfter, parse } from 'date-fns';
-import FormFilterReactSelect from '../../components/FormFilterReactSelect';
-import { timezones } from '../Checkouts/_helpers/Timezones';
 import ReactModal from 'react-modal';
 import { Tooltip } from 'react-lightweight-tooltip';
 import { Button } from '../../components/Button';
@@ -34,7 +32,6 @@ import { Button } from '../../components/Button';
 /* Types */
 type WebsiteFormType = {
   claimName: string;
-  timezone: number;
   start_date: string;
   start_time: string;
   end_date: string;
@@ -66,11 +63,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   }, [event]);
 
   const DAY = 24 * 60 * 60 * 1000;
-  const parseDate = (date: string, time: string, timezone: number): Date => {
-    const timezoneString = ('00' + Math.abs(timezone)).slice(-2) + '00';
-    const dateString = `${date}T${time}${timezone >= 0 ? `+${timezoneString}` : `-${timezoneString}`}`;
-    return new Date(dateString);
-  };
 
   const formatDate = (date: Date): string => {
     return format(date, 'yyyy-MM-dd');
@@ -98,20 +90,18 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
       captcha: false,
       start_date: '',
       start_time: '',
-      timezone: 0,
       end_date: '',
       end_time: '',
       codesQuantity: 0,
     };
 
     if (website) {
-      const tzDelta = (website.timezone * 60 + new Date().getTimezoneOffset()) * 60000;
+      const tzDelta = new Date().getTimezoneOffset() * 60000;
       const from = new Date(new Date(website.from).getTime() + tzDelta);
       const to = new Date(new Date(website.to).getTime() + tzDelta);
 
       values = {
         claimName: website.claim_name,
-        timezone: website.timezone,
         start_date: formatDate(from),
         start_time: formatTime(from),
         end_date: formatDate(to),
@@ -190,10 +180,13 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   //Submit form
   const onSubmit = async (submittedValues: WebsiteFormType, actions: FormikActions<WebsiteFormType>) => {
     try {
-      const { claimName, start_date, start_time, end_date, end_time, timezone, codesQuantity } = submittedValues;
+      const { claimName, start_date, start_time, end_date, end_time, codesQuantity } = submittedValues;
 
-      const startDateTime: Date = parseDate(start_date, start_time, timezone);
-      const endDateTime: Date = parseDate(end_date, end_time, timezone);
+      const timezoneOffset = new Date().getTimezoneOffset() * 60000;
+      const start = parse(`${start_date} ${start_time}`, 'yyyy-MM-dd HH:mm', new Date()).getTime() - timezoneOffset;
+      const startDateTime: Date = new Date(start);
+      const end = parse(`${end_date} ${end_time}`, 'yyyy-MM-dd HH:mm', new Date()).getTime() - timezoneOffset;
+      const endDateTime: Date = new Date(end);
 
       if (startDateTime && endDateTime && isAfter(startDateTime, endDateTime)) {
         addToast('Start date & time should be before End date & time', {
@@ -210,7 +203,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             eventId,
             claimName,
             codesQuantity,
-            timezone,
             EventSecretType.website,
             startDateTime.toISOString(),
             endDateTime.toISOString(),
@@ -233,7 +225,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             claimName,
             startDateTime.toISOString(),
             endDateTime.toISOString(),
-            timezone,
             EventSecretType.website,
             activeCaptcha,
             activeWebsite,
@@ -357,9 +348,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             onSubmit={onSubmit}
           >
             {({ values, errors, isSubmitting, setFieldValue }) => {
-              const handleSelectChange = (name: string) => (selectedOption: any) =>
-                setFieldValue(name, selectedOption.value);
-
               let startDateLimit =
                 values.end_date !== ''
                   ? {
@@ -385,43 +373,36 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                       <EventField title="Website Name" name="claimName" />
                     </div>
                   </div>
-                  <div className={'date-row'}>
-                    <div className={'col-xs-12 col-md-4'}>
-                      <DatePicker
-                        text="Start Date"
-                        dayToSetup="start_date"
-                        handleDayClick={handleDayClick}
-                        setFieldValue={setFieldValue}
-                        placeholder={values.start_date}
-                        value={values.start_date}
-                        disabled={false}
-                        disabledDays={startDateLimit}
-                      />
-                      <EventField disabled={false} title="" name="start_time" type="time" />
+                  <div className={'row'}>
+                    <div className={'col-xs-12 col-md-6'}>
+                      <div className="datetime-container">
+                        <DatePicker
+                          text="Start Date (UTC)"
+                          dayToSetup="start_date"
+                          handleDayClick={handleDayClick}
+                          setFieldValue={setFieldValue}
+                          placeholder={values.start_date}
+                          value={values.start_date}
+                          disabled={false}
+                          disabledDays={startDateLimit}
+                        />
+                        <EventField disabled={false} title="" name="start_time" type="time" />
+                      </div>
                     </div>
-                    <div className={'col-xs-12  col-md-4'}>
-                      <DatePicker
-                        text="End Date"
-                        dayToSetup="end_date"
-                        handleDayClick={handleDayClick}
-                        setFieldValue={setFieldValue}
-                        placeholder={values.end_date}
-                        value={values.end_date}
-                        disabled={false}
-                        disabledDays={endDateLimit}
-                      />
-                      <EventField disabled={false} title="" name="end_time" type="time" />
-                    </div>
-                    <div className={'col-xs-12 col-md-4'} style={{ paddingBottom: '5px' }}>
-                      <FormFilterReactSelect
-                        label="Timezone"
-                        name="timezone"
-                        placeholder={''}
-                        onChange={handleSelectChange('timezone')}
-                        options={timezones}
-                        disabled={false}
-                        value={timezones?.find((option) => option.value === values['timezone'])}
-                      />
+                    <div className={'col-xs-12  col-md-6'}>
+                      <div className="datetime-container">
+                        <DatePicker
+                          text="End Date (UTC)"
+                          dayToSetup="end_date"
+                          handleDayClick={handleDayClick}
+                          setFieldValue={setFieldValue}
+                          placeholder={values.end_date}
+                          value={values.end_date}
+                          disabled={false}
+                          disabledDays={endDateLimit}
+                        />
+                        <EventField disabled={false} title="" name="end_time" type="time" />
+                      </div>
                     </div>
                   </div>
 
