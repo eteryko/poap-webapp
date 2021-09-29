@@ -248,7 +248,9 @@ const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
 
                   <div className={'col-md-3 col-xs-12 ellipsis center'}>
                     <span className={'visible-sm'}>Claimed / Total: </span>
-                    {secret.deliveriesCount ? secret.deliveriesCount.claimed + '/' + secret.deliveriesCount.total : '-'}
+                    {secret.total !== undefined && secret.claimed !== undefined
+                      ? `${secret.claimed}/${secret.total}`
+                      : '-'}
                   </div>
 
                   <div className={'col-md-1 col-xs-12 center status'}>
