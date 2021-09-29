@@ -1248,7 +1248,11 @@ export type Secret = {
   to: string;
   timezone: number;
   event_id: number;
+  //retro-compatibility with website api
   deliveriesCount?: { total: number; claimed: number };
+  //api core secrets supply
+  total?: number;
+  claimed?: number;
 };
 
 export interface PaginatedSecrets {
