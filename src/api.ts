@@ -52,6 +52,7 @@ export interface PoapEvent {
   expiry_date: string;
   virtual_event: boolean;
   email?: string;
+  private_event?: boolean;
 }
 
 export interface RedeemRequest {
@@ -947,6 +948,7 @@ export interface EventFilter {
   to_date?: Date;
   name?: string;
   expired?: boolean;
+  private_event?: boolean;
 }
 
 type CheckoutRedeemResponse = {
@@ -1471,6 +1473,7 @@ export async function getPaginatedEvents(
     ...filter,
     from_date: filter.from_date ? filter.from_date.toISOString() : undefined,
     to_date: filter.to_date ? filter.to_date.toISOString() : undefined,
+    private_event: filter.private_event,
     offset,
     limit,
     sort_dir: sort?.sort_direction,

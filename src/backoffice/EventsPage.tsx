@@ -204,6 +204,7 @@ type TemplateOptionType = {
 
 const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ create, event }) => {
   const [virtualEvent, setVirtualEvent] = useState<boolean>(event ? event.virtual_event : false);
+  const [privateEvent, setPrivateEvent] = useState<boolean>(event ? !!(event.private_event) : false);
   const [templateOptions, setTemplateOptions] = useState<Template[] | null>(null);
   const [isQrRequestModalOpen, setIsQrRequestModalOpen] = useState<boolean>(false);
   const [isActiveQrRequest, setIsActiveQrRequest] = useState<boolean>(true);
@@ -270,7 +271,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
 
   const initialValues = useMemo(() => {
     if (event) {
-      let { virtual_event, secret_code, start_date, end_date, expiry_date, ...eventKeys } = event;
+      let { virtual_event, secret_code, start_date, end_date, expiry_date, private_event, ...eventKeys } = event;
       return {
         ...eventKeys,
         start_date: start_date.replace(dateRegex, '-'),
@@ -316,6 +317,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   };
 
   const toggleVirtualEvent = () => setVirtualEvent(!virtualEvent);
+  const togglePrivateEvent = () => setPrivateEvent(!privateEvent);
   const toggleMultiDay = (setFieldValue: SetFieldValue, start_date: string) => {
     if (start_date && multiDay) {
       setFieldValue('end_date', start_date);
@@ -454,6 +456,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
             formData.set('expiry_date', dateToSubmitFormatter(othersKeys.expiry_date));
 
             formData.set('virtual_event', String(virtualEvent));
+            formData.set('private_event', String(privateEvent));
 
             if (create) {
               await createEvent(formData!);
@@ -682,6 +685,13 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                 </div>
               )}
               {create && <EventField title={editQrRequest} type="number" name="requested_codes" />}
+              <Tooltip content={'By checking this box, your event will not show up in the event list. You can remove this in the future.'}>
+                <CheckboxField
+                title={'Private Event'}
+                name="private_event"
+                action={togglePrivateEvent}
+                checked={privateEvent}
+              /></Tooltip>
               <SubmitButton text="Save" isSubmitting={isSubmitting} canSubmit={true} />
             </Form>
           );
@@ -921,9 +931,14 @@ export const EventList: React.FC = () => {
   let delayedId: NodeJS.Timeout;
 
   const fetchEvents = useCallback(() => {
-    const filter: EventFilter = {
+    let filter: EventFilter = {
       name: criteria ? criteria : undefined,
     };
+
+    let canSeePrivateEvents =  authClient.isAuthenticated()
+    if ( !canSeePrivateEvents ) {
+      filter = { ...filter, private_event: false }
+    }
 
     return getPaginatedEvents(filter, offset, limit, orderBy);
   }, [offset, criteria, limit, orderBy]);
