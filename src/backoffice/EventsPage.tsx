@@ -174,7 +174,7 @@ export const EditEventForm: React.FC<RouteComponentProps<{
   useEffect(() => {
     const fn = async () => {
       setLoading(true);
-      let event = null;
+      let event: null | PoapFullEvent;
       if (isNaN(+match.params.eventId)) {
         try {
           event = await getEventByFancyId(match.params.eventId);
@@ -191,7 +191,7 @@ export const EditEventForm: React.FC<RouteComponentProps<{
       setEvent(event);
       setLoading(false);
     };
-    fn();
+    fn().then();
   }, [location, match]);
 
   if (!loading) {
@@ -272,8 +272,8 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
 
   useEffect(() => {
     if (event) {
-      checkActiveQrRequest(event.id);
-      checkExpiryEvent(event.expiry_date);
+      checkActiveQrRequest(event.id).then();
+      checkExpiryEvent(event.expiry_date).then();
     }
   }, [event]); /* eslint-disable-line react-hooks/exhaustive-deps */
 

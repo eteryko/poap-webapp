@@ -54,7 +54,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   const [activeCaptcha, setActiveCaptcha] = useState<boolean>(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
   const [isQrGeneratorModalOpen, setIsQrGeneratorModalOpen] = useState<boolean>(false);
-  const [isActiveQrRequest, setIsActiveQrRequest] = useState<boolean>(false);
+  const [qrRequestAmount, setQrRequestAmount] = useState<number | undefined>(undefined);
   const [edit, setEdit] = useState<boolean>(false);
   const [isFetchingWebsite, setIsFetchingWebsite] = useState<boolean>(true);
   const [event, setEvent] = useState<PoapEvent | PoapFullEvent | undefined>(maybeEvent);
@@ -119,7 +119,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
 
   /* Effects */
   useEffect(() => {
-    setIsFetchingWebsite(true);
     if (!maybeEvent) {
       fetchEvent().then();
     }
@@ -152,6 +151,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   };
 
   const fetchWebsite = async () => {
+    setIsFetchingWebsite(true);
     try {
       const _website = await getSecretByEventIdAndSecretCode(eventId, EventSecretType.website, secretCode);
       setWebsite(_website);
@@ -182,11 +182,18 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
     try {
       const { claimName, start_date, start_time, end_date, end_time, codesQuantity } = submittedValues;
 
+      // Update codes data (claimed, total and requested)
+      checkActiveQrRequest(eventId).then(); // requested codes
+      fetchWebsite().then(() => { // claimed and total
+        setIsFetchingWebsite(false);
+      });
+      
       const timezoneOffset = new Date().getTimezoneOffset() * 60000;
       const start = parse(`${start_date} ${start_time}`, 'yyyy-MM-dd HH:mm', new Date()).getTime() - timezoneOffset;
       const startDateTime: Date = new Date(start);
       const end = parse(`${end_date} ${end_time}`, 'yyyy-MM-dd HH:mm', new Date()).getTime() - timezoneOffset;
       const endDateTime: Date = new Date(end);
+    
 
       if (startDateTime && endDateTime && isAfter(startDateTime, endDateTime)) {
         addToast('Start date & time should be before End date & time', {
@@ -277,12 +284,8 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
   };
 
   const checkActiveQrRequest = async (id: number) => {
-    const active = await getActiveRedeemRequests(id, RedeemRequestType.secret_website);
-    if (active.length > 0) {
-      setIsActiveQrRequest(true);
-    } else {
-      setIsActiveQrRequest(false);
-    }
+    const activeQrRequests = await getActiveRedeemRequests(id, RedeemRequestType.secret_website);
+    setQrRequestAmount(activeQrRequests.length);
   };
 
   const getWebsiteUrl = (): string => {
@@ -338,13 +341,13 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
       </ReactModal>
       {/*End Modals*/}
       <div className={'bk-container'}>
-        {!isFetchingWebsite && (
+        {isFetchingWebsite ? <Loading /> : (
           <Formik
             initialValues={initialValues}
             enableReinitialize
             validateOnBlur={false}
             validateOnChange={false}
-            validationSchema={isActiveQrRequest ? WebsiteSchemaWithActiveRequest : WebsiteSchemaWithoutActiveRequest}
+            validationSchema={qrRequestAmount ? WebsiteSchemaWithActiveRequest : WebsiteSchemaWithoutActiveRequest}
             onSubmit={onSubmit}
           >
             {({ values, errors, isSubmitting, setFieldValue }) => {
@@ -365,7 +368,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                   : undefined;
 
               return (
-                <Form className={'website-admin-form'}>
+                <Form className={'website-admin-form'} style={{ color: 'var(--color-primary)' }}>
                   <h2>{edit ? 'Edit Website' : 'Create Website'} </h2>
                   <h3>General Info</h3>
                   <div>
@@ -418,7 +421,7 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                     <div>
                       <div className={'col-md-8 col-sm-12'}>
                         <RequestMoreCodesButton
-                          hasActiveQrRequest={isActiveQrRequest}
+                          hasActiveQrRequest={!!qrRequestAmount}
                           isExpiredEvent={isExpiredEvent}
                           onClick={handleQrRequestModalClick}
                         />
@@ -451,6 +454,15 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
                     </div>
                   </div>
 
+                  <div className={'col-md-12'} style={{marginTop: '10px'}}>
+                    <div>
+                      {`Codes claimed: ${website?.claimed || '-'}/${website?.total || '-'}`}
+                    </div>
+                    <div>
+                      {`Codes requested: ${qrRequestAmount || '-'}`}
+                    </div>
+                  </div>
+
                   <div className={'col-md-12'}>
                     <SubmitButton text="Submit" isSubmitting={isSubmitting} canSubmit={true} />
                   </div>
@@ -459,7 +471,6 @@ const WebsiteForm: FC<WebsiteFormProps> = ({ eventId, secretCode, maybeEvent }) 
             }}
           </Formik>
         )}
-        {isFetchingWebsite && <Loading />}
       </div>
     </>
   );
