@@ -550,13 +550,19 @@ export async function getTemplateById(id?: number): Promise<Template> {
     : fetchJson(`${API_BASE}/event-templates/${id}`);
 }
 
-export async function getEventByFancyId(fancyId: string): Promise<null | PoapFullEvent> {
-  const isAdmin = authClient.isAuthenticated();
+export async function getEventByFancyId(fancyId: string, retry?:boolean): Promise<null | PoapFullEvent> {
+  let isAdmin = authClient.isAuthenticated();
+  if (retry) {
+    isAdmin = false;
+  }
   return isAdmin ? secureFetch(`${API_BASE}/events-admin/${fancyId}`) : fetchJson(`${API_BASE}/events/${fancyId}`);
 }
 
-export async function getEventById(id: number): Promise<PoapFullEvent | null> {
-  const isAdmin = authClient.isAuthenticated();
+export async function getEventById(id: number, retry?:boolean): Promise<PoapFullEvent | null> {
+  let isAdmin = authClient.isAuthenticated();
+  if (retry) {
+    isAdmin = false;
+  }
   return isAdmin ? secureFetch(`${API_BASE}/events/id/${id}`) : fetchJson(`${API_BASE}/events/id/${id}`);
 }
 

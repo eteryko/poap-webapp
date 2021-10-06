@@ -176,9 +176,17 @@ export const EditEventForm: React.FC<RouteComponentProps<{
       setLoading(true);
       let event = null;
       if (isNaN(+match.params.eventId)) {
-        event = await getEventByFancyId(match.params.eventId);
+        try {
+          event = await getEventByFancyId(match.params.eventId);
+        } catch (error) {
+          event = await getEventByFancyId(match.params.eventId, true);
+        }
       } else {
-        event = await getEventById(+match.params.eventId);
+        try {
+          event = await getEventById(+match.params.eventId);
+        } catch (error) {
+          event = await getEventById(+match.params.eventId, true);
+        }
       }
       setEvent(event);
       setLoading(false);
