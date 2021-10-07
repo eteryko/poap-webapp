@@ -22,7 +22,7 @@ const AddressesList: FC<AddressesListProps> = (props) => {
         <div className={'col-xs-2'}>POAPs</div>
         <div className={'col-xs-2 center'}>Claimed</div>
       </div>
-      {addresses.map((each, i) => {
+      {addresses && addresses.map && addresses.map((each, i) => {
         let _events: (PoapEvent | undefined)[] = each.event_ids.split(',').map((e) => {
           const id = parseInt(e, 10);
           return events.find((ev) => ev.id === id);

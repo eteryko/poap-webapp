@@ -326,7 +326,7 @@ const DeliveryForm: FC<RouteComponentProps> = (props) => {
                   edit_codes.join(','),
                   clean_addresses,
                 ).then((delivery) => {
-                  addToast(`Created delivery succesfully!`, {
+                  addToast(`Created delivery successfully!`, {
                     appearance: 'success',
                     autoDismiss: true,
                   });

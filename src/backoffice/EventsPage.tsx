@@ -1,7 +1,17 @@
 import React, { useCallback, useState, ReactElement, useEffect, useMemo, ChangeEvent, ReactNode } from 'react';
 import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import classNames from 'classnames';
-import { Formik, Form, Field, ErrorMessage, FieldProps, FormikActions, FormikHandlers, FormikProps } from 'formik';
+import {
+  Formik,
+  Form,
+  Field,
+  ErrorMessage,
+  FieldProps,
+  FormikActions,
+  FormikHandlers,
+  FormikProps,
+  isNaN,
+} from 'formik';
 import DayPickerInput from 'react-day-picker/DayPickerInput';
 import 'react-day-picker/lib/style.css';
 import { format } from 'date-fns';
@@ -34,21 +44,22 @@ import { useAsync } from 'react-helpers';
 import { PoapEventSchema, PoapEventSchemaEdit, PoapQrRequestSchema } from 'lib/schemas';
 import { generateSecretCode } from 'lib/helpers';
 import {
-  Template,
-  PoapFullEvent,
-  PoapEvent,
+  createEvent,
+  getActiveRedeemRequests,
   getEventByFancyId,
   getEventById,
   getPaginatedEvents,
-  updateEvent,
-  createEvent,
   getTemplates,
-  postQrRequests,
-  getActiveQrRequests,
   PaginatedEvent,
-  SortDirection,
+  PoapEvent,
+  PoapFullEvent,
+  postRedeemRequests,
+  RedeemRequestType,
   SortCondition,
+  SortDirection,
+  updateEvent,
   EventFilter,
+  Template,
 } from '../api';
 import FormFilterReactSelect from 'components/FormFilterReactSelect';
 
@@ -77,7 +88,7 @@ type QrRequestModalProps = {
   setIsActiveQrRequest: (id: number) => void;
   eventId?: number;
   secretCode?: number;
-  isWebsitesRequest: boolean;
+  type: RedeemRequestType;
 };
 
 type QrRequestFormikValues = {
@@ -163,16 +174,24 @@ export const EditEventForm: React.FC<RouteComponentProps<{
   useEffect(() => {
     const fn = async () => {
       setLoading(true);
-      let event = null;
+      let event: null | PoapFullEvent;
       if (isNaN(+match.params.eventId)) {
-        event = await getEventByFancyId(match.params.eventId);
+        try {
+          event = await getEventByFancyId(match.params.eventId);
+        } catch (error) {
+          event = await getEventByFancyId(match.params.eventId, true);
+        }
       } else {
-        event = await getEventById(+match.params.eventId);
+        try {
+          event = await getEventById(+match.params.eventId);
+        } catch (error) {
+          event = await getEventById(+match.params.eventId, true);
+        }
       }
       setEvent(event);
       setLoading(false);
     };
-    fn();
+    fn().then();
   }, [location, match]);
 
   if (!loading) {
@@ -193,6 +212,7 @@ type TemplateOptionType = {
 
 const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ create, event }) => {
   const [virtualEvent, setVirtualEvent] = useState<boolean>(event ? event.virtual_event : false);
+  const [privateEvent, setPrivateEvent] = useState<boolean>(event ? !!(event.private_event) : false);
   const [templateOptions, setTemplateOptions] = useState<Template[] | null>(null);
   const [isQrRequestModalOpen, setIsQrRequestModalOpen] = useState<boolean>(false);
   const [isActiveQrRequest, setIsActiveQrRequest] = useState<boolean>(true);
@@ -201,10 +221,20 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const history = useHistory();
   const veryOldDate = new Date('1900-01-01');
   const veryFutureDate = new Date('2200-01-01');
-  const dateFormatter = (day: Date | number) => format(day, 'MM-dd-yyyy');
-  const dateFormatterString = (date: string) => {
-    const parts = date.split('-');
-    return new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+  const dateFormatter = (day: Date | number) => format(day, 'yyyy-MM-dd');
+  const dateToSubmitFormatter = (dateString: string) => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+
+    /* https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off */
+    const dateUTC = new Date(date.getTime() + Math.abs(date.getTimezoneOffset() * 60000));
+    return format(dateUTC, 'MM-dd-yyyy');
+  };
+
+  const addDays = (date: string | number | Date, days: number) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   };
 
   const fetchTemplates = useCallback(() => getTemplates({ limit: 1000 }), []);
@@ -221,8 +251,8 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const isAdmin = authClient.isAuthenticated();
 
   const checkActiveQrRequest = async (id: number) => {
-    const { active } = await getActiveQrRequests(id);
-    if (active > 0) {
+    const active = await getActiveRedeemRequests(id, RedeemRequestType.qr_code);
+    if (active.length > 0) {
       setIsActiveQrRequest(true);
     } else {
       setIsActiveQrRequest(false);
@@ -242,14 +272,14 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
 
   useEffect(() => {
     if (event) {
-      checkActiveQrRequest(event.id);
-      checkExpiryEvent(event.expiry_date);
+      checkActiveQrRequest(event.id).then();
+      checkExpiryEvent(event.expiry_date).then();
     }
   }, [event]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   const initialValues = useMemo(() => {
     if (event) {
-      let { virtual_event, secret_code, start_date, end_date, expiry_date, ...eventKeys } = event;
+      let { virtual_event, secret_code, start_date, end_date, expiry_date, private_event, ...eventKeys } = event;
       return {
         ...eventKeys,
         start_date: start_date.replace(dateRegex, '-'),
@@ -295,6 +325,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   };
 
   const toggleVirtualEvent = () => setVirtualEvent(!virtualEvent);
+  const togglePrivateEvent = () => setPrivateEvent(!privateEvent);
   const toggleMultiDay = (setFieldValue: SetFieldValue, start_date: string) => {
     if (start_date && multiDay) {
       setFieldValue('end_date', start_date);
@@ -327,8 +358,6 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
   const handleQrRequestModalClick = (): void => {
     setIsQrRequestModalOpen(true);
   };
-
-  const day = 60 * 60 * 24 * 1000;
 
   const warning = (
     <div key={''} className={'backoffice-tooltip'}>
@@ -425,7 +454,17 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
               formData.append(key, typeof value === 'number' ? String(value) : value);
             });
 
-            formData.append('virtual_event', String(virtualEvent));
+            /*
+                Format all dates for retrocompatibility
+                of how the dates are sent
+                to the API (MM-dd-yyyy)
+            */
+            formData.set('start_date', dateToSubmitFormatter(othersKeys.start_date));
+            formData.set('end_date', dateToSubmitFormatter(othersKeys.end_date));
+            formData.set('expiry_date', dateToSubmitFormatter(othersKeys.expiry_date));
+
+            formData.set('virtual_event', String(virtualEvent));
+            formData.set('private_event', String(privateEvent));
 
             if (create) {
               await createEvent(formData!);
@@ -497,7 +536,7 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                       eventId={event?.id}
                       handleModalClose={handleQrRequestModalRequestClose}
                       setIsActiveQrRequest={checkActiveQrRequest}
-                      isWebsitesRequest={false}
+                      type={RedeemRequestType.qr_code}
                     />
                   </ReactModal>
                 </>
@@ -551,14 +590,14 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.start_date}
-                  value={values.start_date !== '' ? new Date(dateFormatterString(values.start_date).getTime()) : ''}
+                  value={values.start_date !== '' ? new Date(values.start_date) : ''}
                   disabled={false}
                   disabledDays={
                     values.end_date !== ''
                       ? {
-                        from: new Date(dateFormatterString(values.end_date).getTime() + day),
-                        to: veryFutureDate,
-                      }
+                          from: addDays(values.end_date, 1),
+                          to: veryFutureDate,
+                        }
                       : undefined
                   }
                 />
@@ -568,14 +607,14 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   handleDayClick={handleDayClick}
                   setFieldValue={setFieldValue}
                   placeholder={values.end_date}
-                  value={values.end_date !== '' ? new Date(dateFormatterString(values.end_date).getTime()) : ''}
+                  value={values.end_date !== '' ? new Date(values.end_date) : ''}
                   disabled={!multiDay}
                   disabledDays={
                     values.start_date !== ''
                       ? {
-                        from: veryOldDate,
-                        to: new Date(dateFormatterString(values.start_date).getTime()),
-                      }
+                          from: veryOldDate,
+                          to: new Date(values.start_date),
+                        }
                       : undefined
                   }
                 />
@@ -586,24 +625,24 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                   setFieldValue={setFieldValue}
                   placeholder={values.expiry_date}
                   helpText="After this date, users will no longer be able to mint this event's POAP"
-                  value={values.expiry_date !== '' ? new Date(dateFormatterString(values.expiry_date).getTime()) : ''}
+                  value={values.expiry_date !== '' ? new Date(values.expiry_date) : ''}
                   disabled={!values.end_date}
                   disabledDays={
                     values.end_date !== ''
                       ? [
-                        {
-                          from: veryOldDate,
-                          to: new Date(dateFormatterString(values.end_date).getTime()),
-                        },
-                        {
-                          from: veryOldDate,
-                          to: new Date(),
-                        },
-                        {
-                          from: getMaxAllowExpiryDate(values.end_date),
-                          to: veryFutureDate,
-                        },
-                      ]
+                          {
+                            from: veryOldDate,
+                            to: new Date(values.end_date),
+                          },
+                          {
+                            from: veryOldDate,
+                            to: new Date(),
+                          },
+                          {
+                            from: getMaxAllowExpiryDate(values.end_date),
+                            to: veryFutureDate,
+                          },
+                        ]
                       : undefined
                   }
                 />
@@ -654,6 +693,13 @@ const EventForm: React.FC<{ create?: boolean; event?: PoapFullEvent }> = ({ crea
                 </div>
               )}
               {create && <EventField title={editQrRequest} type="number" name="requested_codes" />}
+              <Tooltip content={'By checking this box, your event will not show up in the event list. You can remove this in the future.'}>
+                <CheckboxField
+                title={'Private Event'}
+                name="private_event"
+                action={togglePrivateEvent}
+                checked={privateEvent}
+              /></Tooltip>
               <SubmitButton text="Save" isSubmitting={isSubmitting} canSubmit={true} />
             </Form>
           );
@@ -668,7 +714,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
   secretCode,
   handleModalClose,
   setIsActiveQrRequest,
-  isWebsitesRequest,
+  type,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { addToast } = useToasts();
@@ -677,7 +723,7 @@ export const QrRequestModal: React.FC<QrRequestModalProps> = ({
     setIsSubmitting(true);
     const { requested_codes, secret_code } = values;
     if (eventId) {
-      await postQrRequests(eventId, requested_codes, secret_code, isWebsitesRequest)
+      await postRedeemRequests(eventId, requested_codes, secret_code, type)
         .then((_) => {
           setIsSubmitting(false);
           addToast('QR Request created correctly', {
@@ -887,15 +933,20 @@ export const EventList: React.FC = () => {
   const [limit, setLimit] = useState<number>(10);
   const [orderBy, setOrderBy] = useState<SortCondition>({
     sort_by: 'id',
-    sort_direction: SortDirection.descending
+    sort_direction: SortDirection.descending,
   });
 
   let delayedId: NodeJS.Timeout;
 
   const fetchEvents = useCallback(() => {
-    const filter: EventFilter = {
-      name: criteria ? criteria : undefined
+    let filter: EventFilter = {
+      name: criteria ? criteria : undefined,
     };
+
+    let canSeePrivateEvents =  authClient.isAuthenticated()
+    if ( !canSeePrivateEvents ) {
+      filter = { ...filter, private_event: false }
+    }
 
     return getPaginatedEvents(filter, offset, limit, orderBy);
   }, [offset, criteria, limit, orderBy]);
@@ -948,14 +999,15 @@ export const EventList: React.FC = () => {
 
       {hasErrorPaginatedEvents && <div>There was a problem fetching events</div>}
 
-      {paginatedEvent &&
+      {paginatedEvent && (
         <EventTable
           events={paginatedEvent.items}
           total={paginatedEvent.total}
           limit={paginatedEvent.limit}
           onChangePage={(page) => setOffset(page * paginatedEvent.limit)}
           onChangeSort={setOrderBy}
-        />}
+        />
+      )}
     </div>
   );
 };
@@ -964,7 +1016,7 @@ const EventTable: React.FC<EventTableProps> = ({ events, total, onChangePage, on
   const [page, setPage] = useState<number>(0);
   const [orderBy, setOrderBy] = useState<SortCondition>({
     sort_by: 'id',
-    sort_direction: SortDirection.descending
+    sort_direction: SortDirection.descending,
   });
 
   useEffect(() => {
@@ -984,74 +1036,94 @@ const EventTable: React.FC<EventTableProps> = ({ events, total, onChangePage, on
     let dir;
 
     if (orderBy.sort_by === field && orderBy.sort_direction === SortDirection.ascending) {
-      dir = SortDirection.descending
+      dir = SortDirection.descending;
     } else {
-      dir = SortDirection.ascending
+      dir = SortDirection.ascending;
     }
     const sortCond = {
       sort_by: field,
-      sort_direction: dir
+      sort_direction: dir,
     };
 
     setOrderBy(sortCond);
     onChangeSort(sortCond);
-  }
+  };
 
   return (
     <div>
       <div className={'admin-table transactions'}>
         <div className={'row table-header visible-md'}>
           <div className={'col-md-1 center pointer'} onClick={() => handleSort('id')}>
-            #{orderBy.sort_by === 'id' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            #
+            {orderBy.sort_by === 'id' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={`col-md-6 pointer`} onClick={() => handleSort('name')}>
             Name of the POAP
-            {orderBy.sort_by === 'name' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            {orderBy.sort_by === 'name' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={'col-md-2 center'} onClick={() => handleSort('start_date')}>
             Start Date
-            {orderBy.sort_by === 'start_date' && <img className={'img-sort'} src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown} alt={'sort'} />}
+            {orderBy.sort_by === 'start_date' && (
+              <img
+                className={'img-sort'}
+                src={orderBy.sort_direction === SortDirection.ascending ? sortUp : sortDown}
+                alt={'sort'}
+              />
+            )}
           </div>
           <div className={'col-md-2 center'}>Image</div>
           {isAdmin && <div className={'col-md-1 center'}>Edit</div>}
         </div>
         <div className={'admin-table-row'}>
-          {events && events.map((event, i) => (
-            <div className={`row ${i % 2 === 0 ? 'even' : 'odd'} relative`} key={event.id}>
-              <div className={'col-md-1 center'}>
-                <span className={'visible-sm visible-md'}>#</span>
-                {event.id}
+          {events &&
+            events.map((event, i) => (
+              <div className={`row ${i % 2 === 0 ? 'even' : 'odd'} relative`} key={event.id}>
+                <div className={'col-md-1 center'}>
+                  <span className={'visible-sm visible-md'}>#</span>
+                  {event.id}
+                </div>
+                <div className={`col-md-6 ellipsis`}>
+                  <span className={'visible-sm'}>
+                    Name of the POAP: <br />
+                  </span>
+                  <a href={event.event_url} title={event.name} target="_blank" rel="noopener noreferrer">
+                    {event.name}
+                  </a>
+                </div>
+                <div className={'col-md-2 center'}>
+                  <span className={'visible-sm'}>Start date: </span>
+                  <span>{event.start_date}</span>
+                </div>
+                <div className={'col-md-2 center '}>
+                  <Tooltip
+                    content={[
+                      <div key={''} className={'event-table-tooltip'}>
+                        <img alt={event.image_url} src={event.image_url} className={'tooltipped'} />
+                      </div>,
+                    ]}
+                  >
+                    <img alt={event.image_url} className={'logo-image'} src={event.image_url} />
+                  </Tooltip>
+                </div>
+                <div className={'col-md-1 center event-edit-icon-container'}>
+                  <Link to={`/admin/events/${event.fancy_id}`}>
+                    <EditIcon />
+                  </Link>
+                </div>
               </div>
-              <div className={`col-md-6 ellipsis`}>
-                <span className={'visible-sm'}>
-                  Name of the POAP: <br />
-                </span>
-                <a href={event.event_url} title={event.name} target="_blank" rel="noopener noreferrer">
-                  {event.name}
-                </a>
-              </div>
-              <div className={'col-md-2 center'}>
-                <span className={'visible-sm'}>Start date: </span>
-                <span>{event.start_date}</span>
-              </div>
-              <div className={'col-md-2 center '}>
-                <Tooltip
-                  content={[
-                    <div key={''} className={'event-table-tooltip'}>
-                      <img alt={event.image_url} src={event.image_url} className={'tooltipped'} />
-                    </div>,
-                  ]}
-                >
-                  <img alt={event.image_url} className={'logo-image'} src={event.image_url} />
-                </Tooltip>
-              </div>
-              <div className={'col-md-1 center event-edit-icon-container'}>
-                <Link to={`/admin/events/${event.fancy_id}`}>
-                  <EditIcon />
-                </Link>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
         <div className={'pagination'}>
           {total && total > limit && (

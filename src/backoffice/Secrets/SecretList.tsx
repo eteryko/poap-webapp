@@ -2,7 +2,14 @@ import React, { FC, useEffect, useState } from 'react';
 import { useToasts } from 'react-toast-notifications';
 
 /* Helpers */
-import { EventSecretType, getEventById, getSecretByName, getSecrets, PoapEvent, Secret } from '../../api';
+import {
+  EventSecretType,
+  getEventById,
+  getSecretByEventIdAndSecretCode,
+  getSecrets,
+  PoapEvent,
+  Secret,
+} from '../../api';
 
 /* Components */
 import { Loading } from '../../components/Loading';
@@ -16,26 +23,26 @@ import { ReactComponent as EditIcon } from '../../images/edit.svg';
 import checked from '../../images/checked.svg';
 import error from '../../images/error.svg';
 import { format, parse } from 'date-fns';
-import { EventSecretCodeForm } from './EventSecretCodeForm';
+import { EventSecretCodeForm } from '../Websites/EventSecretCodeForm';
 
 /* Types */
 type PaginateAction = {
   selected: number;
 };
 
-type WebsitesListProps = {
+type SecretsListProps = {
   onCreateNew: (event: PoapEvent) => void;
   onEdit: (event: PoapEvent) => void;
 };
 
-const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
+const SecretList: FC<SecretsListProps> = ({ onCreateNew, onEdit }) => {
   /* State */
   const [page, setPage] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
   const [limit, setLimit] = useState<number>(10);
   const [activeStatus, setActiveStatus] = useState<boolean | null>(null);
   const [timeframe, setTimeframe] = useState<string | null>(null);
-  const [websites, setWebsites] = useState<Secret[]>([]);
+  const [secrets, setSecrets] = useState<Secret[]>([]);
   const [isFetching, setIsFetching] = useState<null | boolean>(null);
   const [isEventIdModalOpen, setIsEventIdModalOpen] = useState<boolean>(false);
   const [isFetchingEvent, setIsFetchingEvent] = useState<boolean>(false);
@@ -43,30 +50,26 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
 
   const { addToast } = useToasts();
 
-  /* Effects */
-
   useEffect(() => {
-    if (websites.length > 0) fetchWebsites().then();
+    if (secrets.length > 0) fetchSecrets().then();
   }, [page]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   useEffect(() => {
     setPage(0);
-    fetchWebsites().then();
+    fetchSecrets().then();
   }, [activeStatus, timeframe, limit]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   /* Data functions */
-
-  const fetchWebsites = async () => {
+  const fetchSecrets = async () => {
     setIsFetching(true);
     try {
-      const response = await getSecrets(limit, page * limit, activeStatus, timeframe, EventSecretType.website);
-
+      const response = await getSecrets(limit, page * limit, activeStatus, timeframe, EventSecretType.word);
       if (response) {
-        setWebsites(response.items);
+        setSecrets(response.items);
         setTotal(response.total);
       }
     } catch (e) {
-      addToast('Error while fetching websites', {
+      addToast('Error while fetching secrets', {
         appearance: 'error',
         autoDismiss: false,
       });
@@ -123,11 +126,11 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
     }
   };
 
-  const handleEditOnClick = async (claimName: string): Promise<void> => {
+  const handleEditOnClick = async (event_id: number): Promise<void> => {
     setIsFetching(true);
-    const website = await getSecretByName(claimName);
-    if (website.event_id) {
-      const event = await getEventById(website.event_id);
+    const secret = await getSecretByEventIdAndSecretCode(event_id, EventSecretType.word);
+    if (secret) {
+      const event = await getEventById(secret.event_id);
       setIsFetching(false);
       if (event) {
         onEdit(event);
@@ -139,13 +142,12 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
 
   const tableHeaders = (
     <div className={'row table-header visible-md'}>
-      <div className={'col-md-4 col-xs-3 '}>ClaimName</div>
-      <div className={'col-md-2 col-xs-2 '}>Start Date</div>
-      <div className={'col-md-2 col-xs-2 '}>End Date</div>
-      <div className={'col-md-1 col-xs-2 '}>Claim/Total</div>
-      <div className={'col-md-1 col-xs-1 visible-md center'}>Captcha</div>
-      <div className={'col-md-1 col-xs-1 center'}>Active</div>
-      <div className={'col-md-1 col-xs-1'} />
+      <div className={'col-xs-3 '}>ClaimName</div>
+      <div className={'col-xs-2 '}>Start Date</div>
+      <div className={'col-xs-2 '}>End Date</div>
+      <div className={'col-xs-3 center'}>Claim/Total</div>
+      <div className={'col-xs-1 center'}>Active</div>
+      <div className={'col-xs-1'} />
     </div>
   );
 
@@ -172,7 +174,7 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
         />
       </ReactModal>
       {/*End Modals*/}
-      <h2>Websites</h2>
+      <h2>Secrets</h2>
       <div className="filters-container websites">
         <div className={'filter col-md-4 col-xs-12'}>
           <div className={'filter-group'}>
@@ -220,49 +222,42 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
         </div>
       )}
 
-      {websites && websites.length === 0 && !isFetching && <div className={'no-results'}>No Websites found</div>}
+      {secrets && secrets.length === 0 && !isFetching && <div className={'no-results'}>No Secrets found</div>}
 
-      {websites && websites.length !== 0 && !isFetching && (
+      {secrets && secrets.length !== 0 && !isFetching && (
         <div className={'website-table-section'}>
           {tableHeaders}
           <div className={'admin-table-row website-table'}>
-            {websites.map((website, i) => {
+            {secrets.map((secret, i) => {
               return (
                 <div className={`row ${i % 2 === 0 ? 'even' : 'odd'}`} key={i}>
-                  <div className={'col-md-4 col-xs-12 ellipsis'}>
+                  <div className={'col-md-3 col-xs-12 ellipsis'}>
                     <span className={'visible-sm'}>Claim Name: </span>
-                    {website.claim_name}
+                    {secret.claim_name}
                   </div>
 
                   <div className={'col-md-2 col-xs-12 ellipsis'}>
                     <span className={'visible-sm'}>Start Date: </span>
-                    {website.from ? format(new Date(website.from), 'MM-dd-yyyy HH:MM') : '-'}
+                    {secret.from ? format(new Date(secret.from), 'MM-dd-yyyy HH:MM') : '-'}
                   </div>
 
                   <div className={'col-md-2 col-xs-12 ellipsis'}>
                     <span className={'visible-sm'}>End Date: </span>
-                    {website.to ? format(new Date(website.to), 'MM-dd-yyyy HH:MM') : '-'}
+                    {secret.to ? format(new Date(secret.to), 'MM-dd-yyyy HH:MM') : '-'}
                   </div>
 
-                  <div className={'col-md-1 col-xs-12 ellipsis center'}>
+                  <div className={'col-md-3 col-xs-12 ellipsis center'}>
                     <span className={'visible-sm'}>Claimed / Total: </span>
-                    {website.deliveriesCount?.claimed + '/' + website.deliveriesCount?.total}
-                  </div>
-
-                  <div className={'col-md-1 visible-md center status'}>
-                    <span className={'visible-sm'}>Captcha: </span>
-                    <img
-                      src={website.captcha ? checked : error}
-                      alt={website.captcha ? 'Active' : 'Inactive'}
-                      className={'status-icon'}
-                    />
+                    {secret.total !== undefined && secret.claimed !== undefined
+                      ? `${secret.claimed}/${secret.total}`
+                      : '-'}
                   </div>
 
                   <div className={'col-md-1 col-xs-12 center status'}>
                     <span className={'visible-sm'}>Active: </span>
                     <img
-                      src={website.active ? checked : error}
-                      alt={website.active ? 'Active' : 'Inactive'}
+                      src={secret.active ? checked : error}
+                      alt={secret.active ? 'Active' : 'Inactive'}
                       className={'status-icon status-icon-websites'}
                     />
                   </div>
@@ -270,7 +265,7 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
                   <div className={'col-md-1 col-xs-1 center event-edit-icon-container'}>
                     <EditIcon
                       onClick={async () => {
-                        await handleEditOnClick(website.claim_name);
+                        await handleEditOnClick(secret.event_id);
                       }}
                       style={{ cursor: 'pointer' }}
                     />
@@ -297,4 +292,4 @@ const WebsitesList: FC<WebsitesListProps> = ({ onCreateNew, onEdit }) => {
   );
 };
 
-export default WebsitesList;
+export default SecretList;

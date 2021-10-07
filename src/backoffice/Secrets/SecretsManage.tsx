@@ -2,14 +2,14 @@ import React, { FC, useEffect, useState } from 'react';
 import { getEventById, PoapEvent, validateEventAndSecretCode } from '../../api';
 import { authClient } from '../../auth';
 import ReactModal from 'react-modal';
-import WebsiteForm from './WebsiteForm';
-import WebsitesList from './WebsitesList';
+import SecretForm from './SecretForm';
+import SecretList from './SecretList';
 import { parse } from 'date-fns';
 import { useHistory } from 'react-router-dom';
 import { ROUTES } from '../../lib/constants';
-import { EventSecretCodeForm } from './EventSecretCodeForm';
+import { EventSecretCodeForm } from '../Websites/EventSecretCodeForm';
 
-const WebsitesManage: FC = () => {
+const SecretsManage: FC = () => {
   const [isAuthenticationModalOpen, setIsAuthenticationModalOpen] = useState<boolean>(true);
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | undefined>(undefined);
@@ -67,7 +67,7 @@ const WebsitesManage: FC = () => {
     }
   };
 
-  const handleWebsitesListCreateNewOrEdit = (event: PoapEvent): void => {
+  const handleSecretsListCreateNewOrEdit = (event: PoapEvent): void => {
     setEvent(event);
     setEventId(event.id);
   };
@@ -93,11 +93,11 @@ const WebsitesManage: FC = () => {
       </ReactModal>
       {/*End Modals*/}
       {isAdmin && !eventId && (
-        <WebsitesList onCreateNew={handleWebsitesListCreateNewOrEdit} onEdit={handleWebsitesListCreateNewOrEdit} />
+        <SecretList onCreateNew={handleSecretsListCreateNewOrEdit} onEdit={handleSecretsListCreateNewOrEdit} />
       )}
-      {eventId && <WebsiteForm eventId={eventId} secretCode={secretCode} maybeEvent={event} />}
+      {eventId && <SecretForm eventId={eventId} secretCode={secretCode} maybeEvent={event} />}
     </div>
   );
 };
 
-export { WebsitesManage };
+export { SecretsManage };

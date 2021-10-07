@@ -1,4 +1,4 @@
-import React, { CSSProperties, FC, PropsWithChildren, useEffect, useState } from 'react';
+import React, { CSSProperties, FC, PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { OptionTypeBase } from 'react-select';
 
 /* Libraries */
@@ -16,10 +16,10 @@ import { Link } from 'react-router-dom';
 
 /* Helpers */
 import {
-  getQrRequests,
+  getRedeemRequests,
+  updateRedeemRequests,
   PoapEvent,
-  QrRequest,
-  setQrRequests,
+  RedeemRequest,
   SortCondition,
   SortDirection,
 } from '../api';
@@ -43,7 +43,7 @@ type PaginateAction = {
 type CreationModalProps = {
   handleModalClose: () => void;
   fetchQrRequests: () => void;
-  qrRequest?: QrRequest;
+  qrRequest?: RedeemRequest;
 };
 
 type CreationModalFormikValues = {
@@ -58,8 +58,8 @@ const QrRequests: FC = () => {
   const [reviewedStatus, setReviewedStatus] = useState<string>('');
   const [selectedEvent, setSelectedEvent] = useState<number | undefined>(undefined);
   const [isCreationModalOpen, setIsCreationModalOpen] = useState<boolean>(false);
-  const [currentQrRequests, setCurrentQrRequests] = useState<QrRequest[]>([]);
-  const [selectedQrRequest, setSelectedQrRequest] = useState<undefined | QrRequest>(undefined);
+  const [currentQrRequests, setCurrentQrRequests] = useState<RedeemRequest[]>([]);
+  const [selectedQrRequest, setSelectedQrRequest] = useState<undefined | RedeemRequest>(undefined);
   const [sortCondition, setSortCondition] = useState<undefined | SortCondition>(undefined);
   const [type, setType] = useState<string | undefined>(undefined);
   const width = useWindowWidth();
@@ -87,25 +87,11 @@ const QrRequests: FC = () => {
 
     if (reviewedStatus) _status = reviewedStatus === 'reviewed';
 
-    let website_request: boolean | undefined;
-
-    switch (type) {
-      case 'website':
-        website_request = true;
-        break;
-      case 'qr':
-        website_request = false;
-        break;
-      default:
-        website_request = undefined;
-        break;
-    }
-
-    const response = await getQrRequests(limit, page * limit, _status, event_id, sortCondition, website_request);
-    const { qr_requests, total } = response;
+    const response = await getRedeemRequests(limit, page * limit, _status, event_id, sortCondition, type);
+    const { redeem_requests, total } = response;
 
     setTotal(total);
-    setCurrentQrRequests(qr_requests);
+    setCurrentQrRequests(redeem_requests);
     setIsFetchingQrCodes(false);
   };
 
@@ -143,7 +129,7 @@ const QrRequests: FC = () => {
     return {
       value: event.id,
       label: label,
-      start_date: event.start_date
+      start_date: event.start_date,
     };
   };
 
@@ -171,14 +157,19 @@ const QrRequests: FC = () => {
         reviewed_by: request.reviewed ? request.reviewed_by : '-',
         reviewed: request.reviewed,
         amount: `${request.accepted_codes} / ${request.requested_codes}`,
-        website_request: request.website_request,
+        type: request.type,
       };
     });
   };
 
+  const tableData = useMemo<QrRequestTableData[]>(() => {
+    return currentQrRequests ? getTableData() : [];
+    // eslint-disable-next-line
+  }, [currentQrRequests]);
+
   const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { value } = e.target;
-    setType(value);
+    setType(value !== '' ? value : undefined);
   };
 
   return (
@@ -192,7 +183,8 @@ const QrRequests: FC = () => {
               styles={colourStyles}
               toEventOption={toEventOption}
               onChange={handleSelectChange}
-              placeholder={'Filter by Event'} />
+              placeholder={'Filter by Event'}
+            />
           </div>
         </div>
         <div className={'filter col-md-3 col-xs-6'}>
@@ -207,8 +199,9 @@ const QrRequests: FC = () => {
         <div className={'filter col-xs-6 col-md-3'}>
           <FilterSelect handleChange={handleTypeChange}>
             <option value="">Filter by type</option>
-            <option value="website">Website Requests</option>
-            <option value="qr">QR Requests</option>
+            <option value="secret_website">Website Requests</option>
+            <option value="qr_code">QR Requests</option>
+            <option value="secret_word">Secret Requests</option>
           </FilterSelect>
         </div>
         <ReactModal
@@ -239,14 +232,14 @@ const QrRequests: FC = () => {
 
       {width > 990 ? (
         <QrRequestTable
-          data={getTableData()}
+          data={tableData}
           loading={isFetchingQrCodes}
           onEdit={handleCreationModalClick}
           onSortChange={handleOnSortChanged}
         />
       ) : (
         <QrRequestTableMobile
-          data={getTableData()}
+          data={tableData}
           loading={isFetchingQrCodes}
           onEdit={handleCreationModalClick}
           onSortChange={handleOnSortChanged}
@@ -281,7 +274,7 @@ const CreationModal: React.FC<CreationModalProps> = ({ handleModalClose, qrReque
     setIsSubmitting(true);
     const { requested_codes } = values;
     if (qrRequest) {
-      await setQrRequests(qrRequest.id, requested_codes)
+      await updateRedeemRequests(qrRequest.id, requested_codes)
         .then((_) => {
           setIsSubmitting(false);
           addToast('QR Request approved correctly', {
@@ -375,7 +368,7 @@ interface QrRequestTableData {
   reviewed_by?: string;
   reviewed_date?: string;
   reviewed: boolean;
-  website_request: boolean;
+  type: string;
 }
 
 type QrRequestTableProps = {
@@ -446,8 +439,8 @@ const QrRequestTable: React.FC<QrRequestTableProps> = ({ data, onEdit, onSortCha
       },
       {
         Header: 'Type',
-        accessor: 'website_request',
-        Cell: ({ value }) => <div className={'center'}>{value ? 'website' : 'qr'}</div>,
+        accessor: 'type',
+        Cell: ({ value }) => <div className={'center'}>{value}</div>,
         disableSortBy: true,
       },
       {
@@ -596,6 +589,9 @@ const QrRequestTableMobile: React.FC<QrRequestTableProps> = ({ data, onEdit, loa
               </div>
               <div>
                 <b>Amount:</b> {request.amount}
+              </div>
+              <div>
+                <b>Type:</b> {request.type}
               </div>
               <div>
                 <b>Created Date: </b> {request.created_date}

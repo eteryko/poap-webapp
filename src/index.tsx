@@ -9,10 +9,13 @@ import './poap-eth';
 import AOS from 'aos';
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
+import { parseRoutes } from 'lib/parser';
 
 Sentry.init({
   dsn: process.env.REACT_APP_SENTRY_DNS,
-  integrations: [new Integrations.BrowserTracing()],
+  integrations: [new Integrations.BrowserTracing({
+    beforeNavigate: parseRoutes
+  }),],
   environment: process.env.REACT_APP_SENTRY_ENVIRONMENT,
   // Using COMMIT_REF to get the commit hash in netlify building context
   release: process.env.REACT_APP_SENTRY_RELEASE,

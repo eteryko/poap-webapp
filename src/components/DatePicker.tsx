@@ -15,6 +15,7 @@ type DatePickerContainerProps = {
   placeholder?: string;
   disabled: boolean;
   value: string | Date;
+  className?: string;
 };
 
 const DatePicker = ({
@@ -26,6 +27,7 @@ const DatePicker = ({
   disabledDays,
   disabled,
   value,
+  className,
 }: DatePickerContainerProps) => {
   const handleDayChange = (day: Date) => handleDayClick(day, dayToSetup, setFieldValue);
   let _value = value;
@@ -35,7 +37,7 @@ const DatePicker = ({
     _value = new Date(value.valueOf() + offset * 60 * 1000 * offsetSign);
   }
   return (
-    <div className={`date-picker-container ${dayToSetup === 'end_date' ? 'end-date-overlay' : ''}`}>
+    <div className={`date-picker-container ${className ? className : ''}`}>
       <label>{text}</label>
       <DayPickerInput
         placeholder={placeholder}
